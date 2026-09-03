@@ -8,3 +8,4 @@ build/
 coverage/
 backend/generated/
 *.tsbuildinfo
+db-backup/*.sql
