@@ -46,15 +46,22 @@ npm run dev          # :5173
 
 ### Test accounts (after seeding)
 
-All passwords are `password123`.
+Auction Team: `ritu.menon@procease.local` / `password123`.
 
-| Role | Email |
-|---|---|
-| Auction Team | `ritu.menon@procease.local` |
-| Vendor (NDA accepted) | `vendor1@bharatbearings.example` |
-| Vendor (NDA accepted) | `vendor2@precisionrotodyne.example` |
-| Vendor (NDA **not** accepted — exercises the acceptance gate) | `vendor3@anandengg.example` |
-| Vendor (NDA accepted) | `vendor4@konkanindustrial.example` |
+The 10 seeded vendors each get a **freshly generated random password** —
+`npm run seed` prints every email/password pair to the console at the end
+of the run (that's the only place they're ever shown in plaintext; only
+the bcrypt hash is stored). Re-running the seed resets every vendor's
+password to a new generated one and reprints the list, so the console
+output is always the source of truth for current credentials — don't rely
+on values from an earlier run or from this file.
+
+`vendor3@anandengg.example` (Anand Engineering Works) is seeded with its
+NDA deliberately **not** accepted, to exercise the acceptance gate.
+
+Additional vendors can be onboarded at any time from the running app —
+Auction Desk → **+ Add vendor** — which generates and displays a new
+password the same way, once, at creation time.
 
 ## What's been validated
 
@@ -90,6 +97,51 @@ after go-live rather than during configuration):
    config PATCH, which the backend's `forbidNonWhitelisted` validation
    correctly rejected.
 
+## Beyond the spec — added during the build, all real backend + database
+
+None of these are in the tech spec's screen inventory (§14) or REST table
+(§10). They were added on request after v1 was working end-to-end, using
+the same standard as everything else here: no mock data, every number
+traced to a real table, verified live (including, for a few of these,
+inserting rows via raw `psql` — completely bypassing the app — to prove
+the numbers shown are genuinely re-queried, not cached or hardcoded).
+
+- **Live notification bell** (both roles) — seeded from a real
+  `Notification` row list, pushed live over a per-user Socket.IO room the
+  instant a portal notification is created (auction went live, closed,
+  cancelled, single-bidder alert, outbid). No polling.
+- **Vendor "My Profile" / "My Activity"** — profile fields straight from
+  `Vendor`; activity is a real aggregation over that vendor's own
+  `AuctionResult`/`BidLogEntry` rows (invited/participated counts, wins,
+  average rank, full history).
+- **Vendor Scorecards** (team-facing) — the same aggregation, computed for
+  every vendor at once, sorted by wins.
+- **Vendor self-service onboarding** — Auction Desk → "+ Add vendor"
+  creates a real `Vendor` row with a generated password shown once (the
+  spec assumes a Vendor Master integration that doesn't exist yet — this
+  fills that gap the same way manual referral entry already does for
+  threads).
+- **Analytics dashboard** — auctions by status/format, total baseline vs.
+  awarded value and savings %, avg. bids/responses per auction,
+  single-bidder-alert and no-bid/cancelled counts, savings by category.
+  Every figure recomputed on each request from `Auction` /
+  `AuctionConfigEnglish` / `AuctionConfigJapanese` / `AuctionResult` /
+  `BidLogEntry` / `Notification` — nothing stored separately.
+- **Auction templates** ("copy from a previous auction") — pre-fills the
+  Configure form from a previously-saved `AuctionConfigEnglish`/`Japanese`
+  row.
+- **"You've been outbid" alerts** (English only) — required a real schema
+  migration (`outbid` added to the `NotifEvent` enum). Fires to whichever
+  vendor held L1 immediately before a new bid displaces them, computed
+  inside the same locked transaction as the bid itself so it can never
+  disagree with the actual ranking. Portal-only by design (not
+  email/SMS — could fire many times in one fast-moving auction).
+- **Live bid-trend chart** (Live Console + Result Review) — a price-vs-time
+  line chart straight off `BidLogEntry` via a new `priceHistory` field on
+  the existing team snapshot; no separate tracked series. English: every
+  individual bid plus a bold "leading price" step-line; Japanese: the call
+  price at each tick.
+
 ## Deliberate deviations / flagged assumptions
 
 Everything below was a genuine gap or an unavoidable technical necessity —
@@ -115,10 +167,12 @@ decision. Flagging them here too so they're easy to review as a batch:
   and flagged for manual review — extending the same pattern the spec
   already uses for English manual ties and Japanese active-at-close ties,
   rather than inventing a new rule.
-- **Endpoints not in spec §10's table**: `GET /api/vendors` (vendor
-  directory, for picking invitees), `GET/PATCH /api/notifications*`
-  (portal bell-icon read/list). Necessary plumbing for explicitly in-scope
-  features the endpoint table didn't enumerate.
+- **Endpoints not in spec §10's table**: `GET/POST /api/vendors` (vendor
+  directory + onboarding), `GET /api/vendors/scorecards`,
+  `GET/PATCH /api/notifications*` (portal bell-icon read/list),
+  `GET /api/auctions/templates`, `GET /api/analytics/overview`. Necessary
+  plumbing for explicitly in-scope features the endpoint table didn't
+  enumerate, plus the post-v1 additions documented above.
 - **Real SMS/email provider adapters** (Resend, MSG91): implemented
   against each provider's published API shape but not exercised against
   live credentials — verify before relying on them in production. The
