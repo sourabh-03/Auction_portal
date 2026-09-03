@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AuctionTeamUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Vendor {
+  id                   String    @id @default(uuid())
+  companyName          String
+  city                 String?
+  email                String    @unique
+  // NOT in spec §9's schema listing. SMS notifications to vendors are
+  // explicitly in-scope (§2, §13) but the given schema has no contact
+  // number for Vendor at all — that's an inconsistency in the spec itself,
+  // not a deferred item, so it isn't something a default value can paper
+  // over. Added the minimal field needed to unblock the SMS channel;
+  // flagged prominently rather than silently guessed. Confirm the intended
+  // source/format (e.g. E.164) before real SMS sending goes live.
+  phone                String?
+  passwordHash         String
+  registeredCategories String[]
+  ndaAcceptedAt        DateTime?
+  isActive             Boolean   @default(true) // reserved for future suspension — not enforced in v1
+  createdAt            DateTime  @default(now())
+}
+
+enum ThreadStatus {
+  referred
+  live
+  closed_pending_review
+  closed_no_bids
+  cancelled
+  sent_to_tc
+}
+
+model PrThread {
+  id              String       @id @default(uuid())
+  threadCode      String       @unique // e.g. "THR-2031" — human-facing
+  title           String
+  category        String
+  purchaseCode    String
+  department      String
+  costCentre      String
+  tcBuyerName     String // free text — no TC system to FK against yet
+  qtyDescription  String
+  referralNote    String?
+  resultsNeededBy DateTime?
+  status          ThreadStatus @default(referred)
+  createdById     String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  auction         Auction?
+}
+
+enum AuctionFormat {
+  english
+  japanese
+}
+
+enum AuctionStatus {
+  draft_configuring
+  live
+  closed_pending_review
+  closed_no_bids
+  cancelled
+  sent_to_tc
+}
+
+model Auction {
+  id            String        @id @default(uuid())
+  prThreadId    String        @unique
+  prThread      PrThread      @relation(fields: [prThreadId], references: [id])
+  format        AuctionFormat
+  status        AuctionStatus @default(draft_configuring)
+  createdById   String
+  createdAt     DateTime      @default(now())
+  startedAt     DateTime?
+  endedAt       DateTime?
+  cancelledAt   DateTime?
+  cancelledById String?
+  cancelReason  String?
+  sentToTcAt    DateTime?
+  sentToTcById  String?
+
+  configEnglish  AuctionConfigEnglish?
+  configJapanese AuctionConfigJapanese?
+  invitees       AuctionInvitee[]
+  seats          AuctionSeat[]
+  bidLog         BidLogEntry[]
+  results        AuctionResult[]
+}
+
+enum DecrementType {
+  absolute
+  percentage
+}
+
+enum Visibility {
+  full
+  rank_only
+}
+
+enum TieBreakRule {
+  earliest
+  manual
+}
+
+model AuctionConfigEnglish {
+  auctionId          String        @id
+  auction            Auction       @relation(fields: [auctionId], references: [id])
+  ceilingPrice       Decimal
+  decrementType      DecrementType
+  decrementValue     Decimal
+  durationSec        Int
+  autoExtend         Boolean
+  triggerWindowSec   Int?
+  extensionLengthSec Int?
+  maxExtensions      Int?
+  visibility         Visibility
+  reservePrice       Decimal? // NEVER serialize to a vendor-facing API response
+  tieBreakRule       TieBreakRule
+  currentEndsAt      DateTime? // mutable — the authoritative countdown target
+  extensionsUsed     Int           @default(0)
+}
+
+enum AuctionPhase {
+  awaiting_response
+  transition
+}
+
+model AuctionConfigJapanese {
+  auctionId           String        @id
+  auction             Auction       @relation(fields: [auctionId], references: [id])
+  startingPrice       Decimal
+  floorPrice          Decimal
+  tickDecrement       Decimal
+  tickIntervalSec     Int
+  responseWindowSec   Int
+  autoDrop            Boolean
+  minVendorsRemaining Int
+  currentCallPrice    Decimal?
+  currentPhase        AuctionPhase?
+  currentWindowEndsAt DateTime?
+  tickToken           Int           @default(0) // guards stale async callbacks across ticks
+}
+
+model AuctionInvitee {
+  auctionId String
+  vendorId  String
+  invitedAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  // vendorId deliberately left as a plain column, not a Prisma relation to
+  // Vendor — see §16 (Vendor Master swap hook): FK-shaped columns that will
+  // outlive the current Vendor table stay decoupled at the Prisma-relation
+  // level. `auction` is wired because Auction already declares the opposite
+  // `invitees AuctionInvitee[]` array in §9 and Prisma requires both sides.
+  auction Auction @relation(fields: [auctionId], references: [id])
+
+  @@id([auctionId, vendorId])
+}
+
+model AuctionSeat {
+  auctionId           String
+  vendorId            String
+  active              Boolean   @default(true)
+  lastBidPrice        Decimal?
+  dropPrice           Decimal?
+  respondedThisWindow Boolean   @default(false)
+  // Holds the controlling connection's Socket.IO id — the concrete "which
+  // login currently controls this seat" the spec's field comment describes
+  // (Vendor is a company-level account, so "another login" in practice
+  // means another concurrent session under the same vendorId).
+  joinedByUserId String?
+  // NOT in spec §9's schema listing. Exists solely to implement the
+  // seat-release timeout §17 flags as unspecified and explicitly tells the
+  // builder to "pick a number... before this ships." Default used: 60s of
+  // disconnect (the spec's own suggested value, see SEAT_RELEASE_TIMEOUT_SEC).
+  disconnectedAt DateTime?
+
+  auction Auction @relation(fields: [auctionId], references: [id])
+
+  @@id([auctionId, vendorId])
+}
+
+enum BidLogType {
+  bid
+  stay
+  drop
+  system
+  cancelled
+}
+
+model BidLogEntry {
+  id            BigInt     @id @default(autoincrement())
+  auctionId     String
+  auction       Auction    @relation(fields: [auctionId], references: [id])
+  vendorId      String?
+  actedByUserId String?
+  type          BidLogType
+  price         Decimal?
+  message       String?
+  createdAt     DateTime   @default(now()) // SERVER time only — never accept a client-supplied timestamp
+}
+// DB permission note: REVOKE UPDATE, DELETE ON "BidLogEntry" FROM app_role;
+// Only INSERT is ever permitted on this table, at the database grant level, not just in application code.
+// Enforced in prisma/sql/revoke_bid_log_mutations.sql, applied as a post-migration step.
+
+model BidAttemptRejected {
+  id             BigInt   @id @default(autoincrement())
+  auctionId      String
+  vendorId       String
+  attemptedPrice Decimal
+  reason         String
+  createdAt      DateTime @default(now())
+}
+
+model AuctionResult {
+  auctionId  String
+  vendorId   String
+  rank       Int?
+  finalRate  Decimal?
+  computedAt DateTime @default(now())
+
+  // vendorId stays a plain column for the same reason as AuctionInvitee above.
+  auction Auction @relation(fields: [auctionId], references: [id])
+
+  @@id([auctionId, vendorId])
+}
+
+enum NotifRecipientType {
+  vendor
+  auction_team
+}
+
+enum NotifChannel {
+  sms
+  email
+  portal
+}
+
+enum NotifEvent {
+  auction_live
+  auction_cancelled
+  auction_closed_result
+  single_bidder_alert
+  // Not in spec §13's notification table — a v1.1 addition (see
+  // EnglishEngineService.submitBid): fired to whichever vendor held L1
+  // immediately before a new bid displaced them. English Reverse only —
+  // Japanese Clock has no "leader" concept to be displaced from.
+  outbid
+}
+
+model Notification {
+  id            String             @id @default(uuid())
+  recipientType NotifRecipientType
+  recipientId   String
+  channel       NotifChannel
+  eventType     NotifEvent
+  payload       Json
+  sentAt        DateTime           @default(now())
+  readAt        DateTime? // portal notifications only
+}

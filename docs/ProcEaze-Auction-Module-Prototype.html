@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auction Desk — ProcEaze</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --ink:#14181C; --ink-2:#1D242B; --ink-3:#262F37;
+  --steel:#4A5560; --steel-line:#333E48;
+  --paper:#EDEAE2; --paper-2:#FFFFFF; --line:#D9D4C7; --line-soft:#E4E0D5;
+  --copper:#B5723A; --copper-deep:#8F5A2C; --copper-bg:#F2E4D5;
+  --green:#2F6B4F; --green-bg:#E3EEE7; --green-line:#BEDBC9;
+  --red:#B23A3A; --red-bg:#F7E6E4; --red-line:#E7BCB7;
+  --amber:#B9832A; --amber-bg:#F5EAD6;
+  --text:#1C1F22; --text-mute:#6B6459; --text-faint:#948C7C;
+  --on-dark:#F1EFE8; --on-dark-mute:#9AA5AC; --on-dark-faint:#657079;
+  --r-sm:3px; --r-md:5px; --r-lg:9px;
+  --disp: 'Space Grotesk', sans-serif;
+  --body: 'IBM Plex Sans', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --shadow-card: 0 1px 2px rgba(20,24,28,.06), 0 1px 1px rgba(20,24,28,.04);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--body); color:var(--text); background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--disp); margin:0; letter-spacing:-.01em;}
+p{margin:0;}
+.mono{font-family:var(--mono); font-variant-numeric:tabular-nums;}
+.hidden{display:none !important;}
+button{font-family:var(--body); cursor:pointer;}
+input,select,textarea{font-family:var(--body);}
+::selection{background:var(--copper-bg);}
+
+/* ============ LAYOUT ============ */
+#app{min-height:100vh;}
+.view{display:block;}
+.shell{display:flex; flex-direction:column; min-height:100vh;}
+
+/* ---- top bar ---- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 24px; background:var(--paper-2); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:40; gap:16px; flex-wrap:wrap;
+}
+.topbar-left{display:flex; align-items:center; gap:14px; min-width:0;}
+.brandmark{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+.brandmark .dot{width:8px; height:8px; border-radius:50%; background:var(--copper);}
+.brandmark span{font-family:var(--disp); font-weight:600; font-size:15px; letter-spacing:-.01em;}
+.brandmark small{color:var(--text-faint); font-size:11px; font-family:var(--mono);}
+.crumbs{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-mute); min-width:0; overflow:hidden;}
+.crumbs .seg{white-space:nowrap;}
+.crumbs .seg.current{color:var(--text); font-weight:500;}
+.crumbs .sep{color:var(--text-faint);}
+.crumb-link{background:none; border:none; padding:0; color:var(--text-mute); font-size:13px; text-decoration:underline; text-underline-offset:2px; text-decoration-color:var(--line);}
+.crumb-link:hover{color:var(--copper-deep);}
+.topbar-right{display:flex; align-items:center; gap:10px; flex-shrink:0;}
+.identity-chip{
+  display:flex; align-items:center; gap:8px; padding:6px 10px 6px 6px; border:1px solid var(--line);
+  border-radius:99px; background:var(--paper); font-size:12.5px;
+}
+.identity-chip .avatar{
+  width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--on-dark);
+  display:flex; align-items:center; justify-content:center; font-family:var(--disp); font-size:10.5px; font-weight:600;
+}
+.identity-chip .role-tag{color:var(--text-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;}
+.btn-ghost-sm{background:none; border:1px solid var(--line); border-radius:var(--r-sm); padding:6px 10px; font-size:12.5px; color:var(--text-mute);}
+.btn-ghost-sm:hover{border-color:var(--steel); color:var(--text);}
+
+main.view{flex:1; padding:28px 24px 60px; max-width:1180px; margin:0 auto; width:100%;}
+main.view.wide{max-width:1320px;}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:10px 18px; border-radius:var(--r-sm); font-size:13.5px; font-weight:500;
+  border:1px solid transparent; transition:background .12s, border-color .12s, opacity .12s;
+  white-space:nowrap;
+}
+.btn-primary{background:var(--copper); color:#fff;}
+.btn-primary:hover{background:var(--copper-deep);}
+.btn-primary:disabled{background:var(--line); color:var(--text-faint); cursor:not-allowed;}
+.btn-dark{background:var(--ink); color:var(--on-dark);}
+.btn-dark:hover{background:#000;}
+.btn-secondary{background:var(--paper-2); border-color:var(--line); color:var(--text);}
+.btn-secondary:hover{border-color:var(--steel);}
+.btn-danger{background:var(--red); color:#fff;}
+.btn-danger:hover{background:#8f2c2c;}
+.btn-danger-outline{background:transparent; border-color:var(--red-line); color:var(--red);}
+.btn-danger-outline:hover{background:var(--red-bg);}
+.btn-sm{padding:7px 12px; font-size:12.5px;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:.5; cursor:not-allowed;}
+
+/* ============ LOGIN ============ */
+#view-login{padding:0;}
+.login-wrap{display:grid; grid-template-columns:1.15fr 1fr; min-height:100vh;}
+@media (max-width:880px){.login-wrap{grid-template-columns:1fr;}}
+.login-hero{
+  background:radial-gradient(120% 140% at 15% 0%, #1B2229 0%, var(--ink) 55%, #0F1215 100%);
+  color:var(--on-dark); padding:56px 48px; display:flex; flex-direction:column; justify-content:space-between;
+  min-height:420px; position:relative; overflow:hidden;
+}
+.login-hero .brandmark span{color:var(--on-dark); font-size:16px;}
+.login-hero .brandmark small{color:var(--on-dark-faint);}
+.hero-copy{max-width:460px; margin-top:40px;}
+.hero-copy h1{font-size:32px; line-height:1.15; font-weight:600; color:var(--on-dark);}
+.hero-copy p{margin-top:14px; font-size:14.5px; line-height:1.6; color:var(--on-dark-mute); max-width:400px;}
+.ticker-card{
+  margin-top:44px; background:var(--ink-2); border:1px solid var(--steel-line); border-radius:var(--r-lg);
+  padding:18px 20px; max-width:420px;
+}
+.ticker-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.live-badge{display:flex; align-items:center; gap:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#E8A0A0; font-family:var(--mono);}
+.live-badge .pulse{width:6px; height:6px; border-radius:50%; background:#E5605C; animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.25;}}
+.ticker-head .lot-name{font-size:11px; color:var(--on-dark-faint); font-family:var(--mono);}
+.ticker-row{display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-top:1px solid var(--steel-line);}
+.ticker-row:first-of-type{border-top:none;}
+.ticker-row .bidder{font-size:12.5px; color:var(--on-dark-mute);}
+.ticker-row .price{font-family:var(--mono); font-size:14px; color:var(--on-dark); font-weight:500;}
+.ticker-row.l1 .price{color:#8FD3AE;}
+.ticker-row.l1 .rank{color:#8FD3AE;}
+.rank{font-family:var(--mono); font-size:11px; color:var(--on-dark-faint); width:20px; display:inline-block;}
+.hero-foot{font-size:11.5px; color:var(--on-dark-faint); border-top:1px solid var(--steel-line); padding-top:14px; margin-top:36px;}
+
+.login-panel{display:flex; align-items:center; justify-content:center; padding:48px 40px; background:var(--paper);}
+.login-box{width:100%; max-width:400px;}
+.login-box h2{font-size:20px; margin-bottom:4px;}
+.login-box .sub{color:var(--text-mute); font-size:13px; margin-bottom:26px;}
+.role-card{
+  border:1px solid var(--line); border-radius:var(--r-md); padding:16px 18px; margin-bottom:12px; background:var(--paper-2);
+  cursor:pointer; transition:border-color .12s, box-shadow .12s;
+}
+.role-card:hover{border-color:var(--steel);}
+.role-card.selected{border-color:var(--ink); box-shadow:0 0 0 1px var(--ink);}
+.role-card-head{display:flex; align-items:center; justify-content:space-between;}
+.role-card-head b{font-size:14px;}
+.role-card-head span{font-size:11px; color:var(--text-faint); font-family:var(--mono);}
+.role-card p{font-size:12.5px; color:var(--text-mute); margin-top:5px; line-height:1.5;}
+.vendor-select-wrap{margin-top:10px; padding-top:12px; border-top:1px dashed var(--line);}
+.vendor-select-wrap select{
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper-2);
+  font-size:13px; color:var(--text);
+}
+.vendor-tags{display:flex; gap:5px; margin-top:8px; flex-wrap:wrap;}
+.tag{font-size:10px; text-transform:uppercase; letter-spacing:.03em; padding:3px 7px; border-radius:99px; background:var(--paper); border:1px solid var(--line); color:var(--text-mute); font-family:var(--mono);}
+.login-submit{margin-top:16px;}
+.auth-note{
+  margin-top:22px; font-size:11.5px; line-height:1.6; color:var(--text-faint); padding:12px 14px;
+  background:var(--paper-2); border:1px solid var(--line-soft); border-radius:var(--r-md);
+}
+.auth-note b{color:var(--text-mute);}
+
+/* ============ DESK / QUEUE ============ */
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap;}
+.page-head h1{font-size:24px;}
+.page-head .lede{color:var(--text-mute); font-size:13.5px; margin-top:6px; max-width:560px; line-height:1.55;}
+.scope-strip{
+  display:flex; align-items:center; gap:10px; background:var(--paper-2); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:12px 16px; margin-bottom:22px; font-size:12.5px; color:var(--text-mute); line-height:1.5;
+}
+.scope-strip svg{flex-shrink:0; margin-top:2px;}
+.scope-strip b{color:var(--text);}
+
+.thread-list{display:flex; flex-direction:column; gap:10px;}
+.thread-card{
+  background:var(--paper-2); border:1px solid var(--line); border-radius:var(--r-md); padding:18px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; box-shadow:var(--shadow-card);
+}
+.thread-main{display:flex; gap:16px; align-items:flex-start; min-width:280px; flex:1;}
+.thread-id{font-family:var(--mono); font-size:11px; color:var(--text-faint); padding-top:2px;}
+.thread-info h3{font-size:15.5px; font-weight:600;}
+.thread-meta{display:flex; gap:14px; margin-top:6px; flex-wrap:wrap;}
+.thread-meta span{font-size:12px; color:var(--text-mute); display:flex; align-items:center; gap:5px;}
+.thread-meta .dim{color:var(--text-faint);}
+.thread-side{display:flex; align-items:center; gap:14px; flex-shrink:0;}
+.status-pill{
+  font-size:11px; padding:5px 10px; border-radius:99px; font-weight:500; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.status-pill.referred{background:var(--amber-bg); color:var(--amber);}
+.status-pill.live{background:var(--red-bg); color:var(--red);}
+.status-pill.live .dot{width:6px; height:6px; border-radius:50%; background:var(--red); animation:pulse 1.6s infinite;}
+.status-pill.review{background:var(--copper-bg); color:var(--copper-deep);}
+.status-pill.sent{background:var(--green-bg); color:var(--green);}
+
+/* ============ FORM / CONFIGURE ============ */
+.config-grid{display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;}
+@media (max-width:900px){.config-grid{grid-template-columns:1fr;}}
+.panel{background:var(--paper-2); border:1px solid var(--line); border-radius:var(--r-md); padding:22px 24px; margin-bottom:18px;}
+.panel h3{font-size:14px; margin-bottom:3px;}
+.panel .panel-sub{font-size:12px; color:var(--text-mute); margin-bottom:16px;}
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+.field{display:flex; flex-direction:column; gap:6px;}
+.field label{font-size:12px; font-weight:500; color:var(--text); display:flex; align-items:center; gap:6px;}
+.field .hint{font-size:11px; color:var(--text-faint); font-weight:400;}
+.field input[type=text], .field input[type=number], .field select, .field textarea{
+  padding:9px 11px; border:1px solid var(--line); border-radius:var(--r-sm); font-size:13px; background:var(--paper-2); color:var(--text);
+  width:100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--copper); outline-offset:1px; border-color:var(--copper);}
+.input-prefix{position:relative;}
+.input-prefix span{position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--text-faint); font-family:var(--mono);}
+.input-prefix input{padding-left:26px;}
+.format-toggle{display:flex; gap:8px; margin-bottom:18px;}
+.format-opt{
+  flex:1; border:1px solid var(--line); border-radius:var(--r-md); padding:13px 14px; cursor:pointer; background:var(--paper-2);
+}
+.format-opt.active{border-color:var(--ink); box-shadow:0 0 0 1px var(--ink); background:var(--paper);}
+.format-opt b{font-size:13px; display:block;}
+.format-opt span{font-size:11.5px; color:var(--text-mute); display:block; margin-top:3px; line-height:1.4;}
+.toggle-row{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-top:1px solid var(--line-soft);}
+.toggle-row:first-of-type{border-top:none;}
+.toggle-row .tlabel b{font-size:12.5px; display:block;}
+.toggle-row .tlabel span{font-size:11px; color:var(--text-mute);}
+.switch{position:relative; width:38px; height:21px; flex-shrink:0;}
+.switch input{opacity:0; width:0; height:0;}
+.switch .slider{position:absolute; inset:0; background:var(--line); border-radius:99px; transition:.15s; cursor:pointer;}
+.switch .slider:before{content:""; position:absolute; width:15px; height:15px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s;}
+.switch input:checked + .slider{background:var(--ink);}
+.switch input:checked + .slider:before{transform:translateX(17px);}
+.callout{
+  display:flex; gap:9px; padding:10px 12px; border-radius:var(--r-sm); font-size:11.5px; line-height:1.55; margin-top:6px;
+}
+.callout.info{background:var(--copper-bg); color:#7A4A24;}
+.callout.warn{background:var(--amber-bg); color:#7A5518;}
+.invitee-list{display:flex; flex-direction:column; gap:2px;}
+.invitee-row{display:flex; align-items:center; gap:11px; padding:10px 4px; border-bottom:1px solid var(--line-soft);}
+.invitee-row:last-child{border-bottom:none;}
+.invitee-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--ink); flex-shrink:0;}
+.invitee-name{font-size:13px; font-weight:500;}
+.invitee-meta{font-size:11px; color:var(--text-mute); margin-top:2px;}
+.side-summary{position:sticky; top:78px;}
+.summary-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:12.5px;}
+.summary-row:last-child{border-bottom:none;}
+.summary-row .k{color:var(--text-mute);}
+.summary-row .v{font-family:var(--mono); font-weight:500; text-align:right;}
+
+/* ============ LIVE CONSOLE (dark) ============ */
+.live-shell{background:var(--ink); border-radius:var(--r-lg); overflow:hidden; color:var(--on-dark); box-shadow:var(--shadow-card);}
+.live-top{
+  display:flex; align-items:center; justify-content:space-between; padding:20px 26px; border-bottom:1px solid var(--steel-line);
+  flex-wrap:wrap; gap:14px;
+}
+.live-top-l h2{font-size:18px; color:var(--on-dark);}
+.live-top-l .sub{font-size:12px; color:var(--on-dark-mute); margin-top:4px; font-family:var(--mono);}
+.timer-block{text-align:right;}
+.timer-block .tlabel{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-dark-faint);}
+.timer-block .tval{font-family:var(--mono); font-size:30px; font-weight:600; color:var(--on-dark); line-height:1.1;}
+.timer-block .tval.urgent{color:#E88484;}
+.live-body{padding:22px 26px; display:grid; grid-template-columns:1.4fr 1fr; gap:22px;}
+@media (max-width:940px){.live-body{grid-template-columns:1fr;}}
+.price-strip{display:flex; gap:22px; flex-wrap:wrap; margin-bottom:18px;}
+.price-block .plabel{font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-dark-faint);}
+.price-block .pval{font-family:var(--mono); font-size:20px; font-weight:600; margin-top:3px;}
+.price-block .pval.dim{color:var(--on-dark-mute); font-size:14px; font-weight:400;}
+.rank-table{border:1px solid var(--steel-line); border-radius:var(--r-md); overflow:hidden;}
+.rank-head-row, .rank-row{display:grid; grid-template-columns:36px 1fr 120px 90px; align-items:center; padding:10px 14px; gap:10px;}
+.rank-head-row{font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--on-dark-faint); background:var(--ink-2);}
+.rank-row{border-top:1px solid var(--steel-line); font-size:13px; background:var(--ink-2); transition:background .3s;}
+.rank-row.flash{background:#2A3A30;}
+.rank-row .r-rank{font-family:var(--mono); font-size:12px; color:var(--on-dark-mute);}
+.rank-row.l1 .r-rank{color:#8FD3AE; font-weight:600;}
+.rank-row .r-name{font-weight:500;}
+.rank-row .r-name small{display:block; font-size:10.5px; color:var(--on-dark-faint); font-weight:400; margin-top:1px;}
+.rank-row .r-price{font-family:var(--mono); text-align:right;}
+.rank-row.l1 .r-price{color:#8FD3AE;}
+.rank-row .r-status{text-align:right; font-size:11px; color:var(--on-dark-faint);}
+.rank-row .r-status.dropped{color:#D98C8C;}
+.rank-row .r-status.you{color:var(--on-dark);}
+.live-side-panel{background:var(--ink-2); border:1px solid var(--steel-line); border-radius:var(--r-md); padding:16px 18px; margin-bottom:14px;}
+.live-side-panel h4{font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--on-dark-faint); margin-bottom:10px;}
+.meta-line{display:flex; justify-content:space-between; padding:6px 0; font-size:12px; border-top:1px solid var(--steel-line);}
+.meta-line:first-of-type{border-top:none;}
+.meta-line .k{color:var(--on-dark-mute);}
+.meta-line .v{font-family:var(--mono); color:var(--on-dark);}
+.meta-line .v.locked{display:flex; align-items:center; gap:5px; color:var(--on-dark-faint);}
+.log-panel{background:var(--ink-2); border:1px solid var(--steel-line); border-radius:var(--r-md); padding:0; overflow:hidden;}
+.log-head{display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--steel-line);}
+.log-head h4{font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--on-dark-faint);}
+.log-export{background:none; border:1px solid var(--steel-line); color:var(--on-dark-mute); font-size:10.5px; padding:4px 8px; border-radius:var(--r-sm);}
+.log-export:hover{color:var(--on-dark); border-color:var(--steel);}
+.log-body{max-height:260px; overflow-y:auto; padding:6px 16px;}
+.log-row{display:flex; gap:10px; padding:7px 0; border-top:1px solid var(--steel-line); font-size:11.5px;}
+.log-row:first-child{border-top:none;}
+.log-row .lt{color:var(--on-dark-faint); font-family:var(--mono); flex-shrink:0; width:66px;}
+.log-row .lc{color:var(--on-dark-mute);}
+.log-row .lc b{color:var(--on-dark); font-weight:500;}
+.log-row.sys .lc{color:#D9B27C; font-style:italic;}
+.log-row.drop .lc{color:#D98C8C;}
+
+/* ============ VENDOR BIDDING ============ */
+.vendor-console{max-width:640px; margin:0 auto;}
+.bid-panel{background:var(--ink); border-radius:var(--r-lg); padding:28px 30px; color:var(--on-dark); box-shadow:var(--shadow-card);}
+.bid-panel-top{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:22px; flex-wrap:wrap;}
+.bid-panel-top h2{font-size:19px; color:var(--on-dark);}
+.bid-panel-top .sub{font-size:12px; color:var(--on-dark-mute); margin-top:4px;}
+.your-rank-box{
+  text-align:center; padding:26px 20px; background:var(--ink-2); border:1px solid var(--steel-line); border-radius:var(--r-md);
+  margin-bottom:20px;
+}
+.your-rank-box .rlabel{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-dark-faint);}
+.your-rank-box .rvalue{font-family:var(--disp); font-size:44px; font-weight:700; margin-top:6px; line-height:1;}
+.your-rank-box .rvalue.l1{color:#8FD3AE;}
+.your-rank-box .rnote{font-size:12px; color:var(--on-dark-mute); margin-top:8px;}
+.bid-form{display:flex; gap:10px; margin-top:6px;}
+.bid-form .input-prefix{flex:1;}
+.bid-form input{
+  width:100%; padding:13px 14px 13px 30px; border-radius:var(--r-sm); border:1px solid var(--steel-line);
+  background:var(--ink-2); color:var(--on-dark); font-family:var(--mono); font-size:16px;
+}
+.bid-form input:focus{outline:2px solid var(--copper); border-color:var(--copper);}
+.bid-form .input-prefix span{color:var(--on-dark-faint);}
+.bid-error{color:#E88484; font-size:12px; margin-top:8px; display:flex; gap:6px; align-items:flex-start;}
+.bid-success-msg{color:#8FD3AE; font-size:12px; margin-top:8px;}
+.mini-note{font-size:11.5px; color:var(--on-dark-faint); margin-top:10px; line-height:1.5;}
+.rank-board-mini{margin-top:20px;}
+.rank-board-mini h4{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--on-dark-faint); margin-bottom:8px;}
+
+.clock-face{text-align:center; padding:30px 20px;}
+.clock-face .clabel{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-dark-faint);}
+.clock-face .cprice{font-family:var(--disp); font-size:46px; font-weight:700; margin:8px 0 4px;}
+.clock-face .cdelta{font-size:12.5px; color:var(--on-dark-mute);}
+.decision-window{margin-top:20px;}
+.window-bar{height:5px; background:var(--steel-line); border-radius:99px; overflow:hidden; margin-bottom:16px;}
+.window-bar-fill{height:100%; background:var(--copper); border-radius:99px; transition:width 1s linear;}
+.decision-btns{display:flex; gap:10px;}
+.decision-btns .btn{flex:1; padding:15px 0; font-size:14px; font-weight:600;}
+.decision-status{
+  text-align:center; padding:11px; border-radius:var(--r-sm); font-size:12.5px; margin-bottom:14px; background:var(--ink-2);
+  color:var(--on-dark-mute); border:1px solid var(--steel-line);
+}
+.decision-status.responded{color:#8FD3AE; border-color:#2F5F45;}
+.decision-status.dropped{color:#D98C8C; border-color:#6B3535;}
+.field-count{display:flex; justify-content:space-around; margin-top:22px; padding-top:18px; border-top:1px solid var(--steel-line);}
+.field-count div{text-align:center;}
+.field-count b{display:block; font-family:var(--mono); font-size:20px;}
+.field-count span{font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--on-dark-faint);}
+
+.closed-card{
+  background:var(--paper-2); border:1px solid var(--line); border-radius:var(--r-md); padding:36px 32px; text-align:center;
+}
+.closed-card .icon-wrap{width:52px; height:52px; border-radius:50%; margin:0 auto 16px; display:flex; align-items:center; justify-content:center;}
+.closed-card h2{font-size:19px;}
+.closed-card p{color:var(--text-mute); font-size:13px; margin-top:8px; line-height:1.6; max-width:420px; margin-left:auto; margin-right:auto;}
+.closed-card .final-price{font-family:var(--mono); font-size:26px; margin-top:16px; font-weight:600;}
+
+/* ============ REVIEW / RESULTS ============ */
+.result-table{width:100%; border-collapse:collapse; margin-top:4px;}
+.result-table th{
+  text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint);
+  padding:8px 12px; border-bottom:1px solid var(--line);
+}
+.result-table th.num, .result-table td.num{text-align:right;}
+.result-table td{padding:12px; border-bottom:1px solid var(--line-soft); font-size:13px;}
+.result-table tr:last-child td{border-bottom:none;}
+.result-table td.num{font-family:var(--mono);}
+.result-table tr.winner{background:var(--green-bg);}
+.result-table tr.winner td:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm);}
+.rank-badge{
+  display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
+  font-family:var(--mono); font-size:11px; background:var(--paper); color:var(--text-mute); font-weight:600;
+}
+.rank-badge.l1{background:var(--green); color:#fff;}
+.banner{
+  display:flex; gap:11px; padding:13px 16px; border-radius:var(--r-md); font-size:12.5px; line-height:1.55; margin-bottom:18px;
+}
+.banner.amber{background:var(--amber-bg); color:#7A5518; border:1px solid #E5CE9B;}
+.banner.green{background:var(--green-bg); color:var(--green); border:1px solid var(--green-line);}
+.banner b{display:block; margin-bottom:2px;}
+.sendoff-box{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:22px; padding-top:20px; border-top:1px solid var(--line); flex-wrap:wrap;}
+.sendoff-box .stext{font-size:12.5px; color:var(--text-mute); max-width:400px; line-height:1.55;}
+
+.section-title{font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); margin:26px 0 10px;}
+.section-title:first-child{margin-top:0;}
+
+/* ============ VENDOR HOME ============ */
+.vh-card{background:var(--paper-2); border:1px solid var(--line); border-radius:var(--r-md); padding:18px 20px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+.vh-card h3{font-size:14.5px;}
+.vh-card .vh-meta{font-size:12px; color:var(--text-mute); margin-top:5px;}
+.empty-state{text-align:center; padding:60px 20px; color:var(--text-mute);}
+.empty-state svg{margin-bottom:14px; opacity:.5;}
+.empty-state p{font-size:13.5px; max-width:340px; margin:6px auto 0; line-height:1.6;}
+
+/* ============ TOASTS ============ */
+#toast-container{position:fixed; top:70px; right:22px; z-index:100; display:flex; flex-direction:column; gap:8px; max-width:320px;}
+.toast{
+  background:var(--ink); color:var(--on-dark); padding:12px 14px; border-radius:var(--r-md); font-size:12.5px; line-height:1.5;
+  box-shadow:0 8px 24px rgba(0,0,0,.25); animation:toastIn .25s ease-out; border:1px solid var(--steel-line);
+}
+.toast b{display:block; font-size:12px; margin-bottom:2px; color:var(--on-dark);}
+.toast.tgood{border-left:3px solid var(--green);}
+.toast.tinfo{border-left:3px solid var(--copper);}
+.toast.twarn{border-left:3px solid var(--amber);}
+@keyframes toastIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+.toast.out{animation:toastOut .25s ease-in forwards;}
+@keyframes toastOut{to{opacity:0; transform:translateX(20px);}}
+
+/* misc */
+.back-link{background:none; border:none; color:var(--text-mute); font-size:12.5px; display:flex; align-items:center; gap:5px; padding:0; margin-bottom:16px;}
+.back-link:hover{color:var(--text);}
+.icon{width:14px; height:14px; flex-shrink:0;}
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media (max-width:640px){.two-col{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= LOGIN ================= -->
+  <section id="view-login" class="view">
+    <div class="login-wrap">
+      <div class="login-hero">
+        <div class="brandmark">
+          <div class="dot"></div><span>ProcEaze</span><small>AUCTION DESK</small>
+        </div>
+        <div class="hero-copy">
+          <h1>Where a sourced rate becomes a bid.</h1>
+          <p>The live reverse-auction console for Techno-Commercial sourcing — configure, run, and hand off English Reverse and Japanese Descending-Clock auctions across referred purchase requisitions.</p>
+        </div>
+        <div class="ticker-card">
+          <div class="ticker-head">
+            <div class="live-badge"><span class="pulse"></span>LIVE EXAMPLE</div>
+            <div class="lot-name">Taper Roller Bearings — 240 units</div>
+          </div>
+          <div class="ticker-row l1"><span class="rank">L1</span><span class="bidder">Bidder A</span><span class="price">₹16,35,000</span></div>
+          <div class="ticker-row"><span class="rank">L2</span><span class="bidder">Bidder C</span><span class="price">₹16,48,000</span></div>
+          <div class="ticker-row"><span class="rank">L3</span><span class="bidder">Bidder B</span><span class="price">₹16,60,000</span></div>
+        </div>
+        <div class="hero-foot">Module scope: Auction Team referral → live bidding → result hand-off to the Techno-Commercial Desk. PR, RFQ, NFA, and PO are handled upstream and downstream of this console.</div>
+      </div>
+      <div class="login-panel">
+        <div class="login-box">
+          <h2>Sign in</h2>
+          <div class="sub">Choose how you're entering the Auction Desk.</div>
+
+          <div class="role-card" id="role-card-team" onclick="selectRole('team')">
+            <div class="role-card-head"><b>Auction Team</b><span>INTERNAL</span></div>
+            <p>Configure auctions referred by the Techno-Commercial Desk, run live bidding, and send results back for award.</p>
+          </div>
+
+          <div class="role-card" id="role-card-vendor" onclick="selectRole('vendor')">
+            <div class="role-card-head"><b>Vendor</b><span>EXTERNAL</span></div>
+            <p>Bid on auctions you've been invited to. You'll only see auctions your company is registered against.</p>
+            <div class="vendor-select-wrap hidden" id="vendor-select-wrap">
+              <select id="vendor-select" onclick="event.stopPropagation()">
+                <option value="">Select your company…</option>
+              </select>
+              <div class="vendor-tags" id="vendor-tags"></div>
+            </div>
+          </div>
+
+          <button class="btn btn-dark btn-block login-submit" id="login-submit" onclick="doLogin()" disabled>Continue</button>
+
+          <div class="auth-note">
+            <b>About this screen:</b> role and company selection stand in for real authentication in this prototype. In production every role from BRD §5 is enforced server-side per session — a vendor session must only ever see the RFQs and auctions it was actually invited to (§13.3), not just have them hidden in the UI.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APP SHELL ================= -->
+  <div class="shell hidden" id="shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brandmark"><div class="dot"></div><span>ProcEaze</span><small>AUCTION DESK</small></div>
+        <div class="crumbs" id="crumbs"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-ghost-sm" onclick="resetDemo()">Reset demo</button>
+        <div class="identity-chip" id="identity-chip"></div>
+        <button class="btn-ghost-sm" onclick="signOut()">Switch role</button>
+      </div>
+    </header>
+
+    <main class="view" id="view-desk"></main>
+    <main class="view hidden wide" id="view-configure"></main>
+    <main class="view hidden wide" id="view-live-internal"></main>
+    <main class="view hidden" id="view-review"></main>
+    <main class="view hidden" id="view-vendor-home"></main>
+    <main class="view hidden" id="view-live-vendor"></main>
+  </div>
+
+</div>
+<div id="toast-container"></div>
+
+<script>
+/* =========================================================================
+   PROCEAZE — AUCTION DESK PROTOTYPE
+   Scope: Auction Team referral intake -> configure -> live bidding
+          (English Reverse / Japanese Descending Clock) -> result hand-off
+          to the Techno-Commercial Desk. Maps to BRD FR-29..FR-41, FR-40/41,
+          BR-06, BR-07. All state lives in this browser session only
+          (BRD §13.1 — production requires a shared real-time backend).
+   ========================================================================= */
+
+/* ---------------- vendor directory ---------------- */
+const VENDOR_DIRECTORY = {
+  v1:{name:'Bharat Bearings & Components', city:'Mumbai', rating:4.3, categories:['Mechanical Spares']},
+  v2:{name:'Precision Rotodyne Pvt Ltd', city:'Pune', rating:4.6, categories:['Mechanical Spares']},
+  v3:{name:'Anand Engineering Works', city:'Ahmedabad', rating:4.1, categories:['Mechanical Spares','Abrasives & Cutting Tools']},
+  v4:{name:'Konkan Industrial Traders', city:'Vapi', rating:3.9, categories:['Mechanical Spares','Safety & PPE']},
+  v5:{name:'SafeGuard Industrial Supplies', city:'Ahmedabad', rating:4.4, categories:['Safety & PPE']},
+  v6:{name:'National PPE & Safety Co.', city:'Surat', rating:4.0, categories:['Safety & PPE']},
+  v7:{name:'TrustWear Protective Gear', city:'Vadodara', rating:4.2, categories:['Safety & PPE']},
+};
+
+function fmtINR(n){
+  n = Math.round(n);
+  return '₹' + n.toLocaleString('en-IN');
+}
+function fmtTime(d){
+  return d.toLocaleTimeString('en-IN', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+function fmtClock(ms){
+  if(ms<0) ms=0;
+  const s = Math.floor(ms/1000);
+  const m = Math.floor(s/60);
+  const r = s%60;
+  return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
+}
+function rnd(a,b){ return Math.random()*(b-a)+a; }
+function rndInt(a,b){ return Math.floor(rnd(a,b+1)); }
+function nowStamp(){
+  const d = new Date();
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ', ' + fmtTime(d);
+}
+
+/* ---------------- initial auction data ---------------- */
+function freshAuctions(){
+  const now = Date.now();
+  return {
+    'THR-2031': {
+      id:'THR-2031', title:'Taper Roller Bearings & Coupling Assemblies', category:'Mechanical Spares',
+      purchaseCode:'PC-MECH-01', department:'Mechanical', costCentre:'CC-001', tcBuyer:'Yash Patel',
+      qty:'240 sets', resultsNeededBy: relDate(2), 
+      referralNote:'RFQ spread was wide (₹16.2L–₹21.4L) across 4 responsive vendors — recommend a live auction to compress before award.',
+      status:'referred', // referred -> configuring(implicit) -> live -> closed_pending_review -> sent_to_tc
+      invitees:['v1','v2','v3','v4'],
+      format:null, config:null,
+      bids:[], vendors:{}, bots:{}, humanVendorId:null,
+      startedAt:null, endsAt:null, extensionsUsed:0,
+      finalRanking:null, sentAt:null, sentBy:null,
+    },
+    'THR-2044': {
+      id:'THR-2044', title:'Industrial Safety Gloves & PPE Kit', category:'Safety & PPE',
+      purchaseCode:'PC-SAFETY-01', department:'Safety', costCentre:'CC-005', tcBuyer:'Neha Kulkarni',
+      qty:'5,000 kits', resultsNeededBy: relDate(3),
+      referralNote:'Four VRQ-approved vendors responded within 8% of each other on the RFQ — auction likely to yield meaningful compression.',
+      status:'referred',
+      invitees:['v4','v5','v6','v7'],
+      format:null, config:null,
+      bids:[], vendors:{}, bots:{}, humanVendorId:null,
+      startedAt:null, endsAt:null, extensionsUsed:0,
+      finalRanking:null, sentAt:null, sentBy:null,
+    },
+    'THR-1998': {
+      id:'THR-1998', title:'Cutting Discs & Abrasives — Bulk Lot', category:'Abrasives & Cutting Tools',
+      purchaseCode:'PC-MECH-03', department:'Mechanical', costCentre:'CC-004', tcBuyer:'Yash Patel',
+      qty:'12,000 pcs', resultsNeededBy: relDate(-2),
+      referralNote:'Only 6% spread on RFQ, but TC wanted a final transparent compression pass before a high-volume award.',
+      status:'sent_to_tc',
+      invitees:['v2','v3','v4'],
+      format:'english',
+      config:{ ceiling:940000, decrementType:'absolute', decrementValue:2000, durationMin:5, autoExtend:true,
+                triggerWindowSec:45, extensionLengthSec:45, maxExtensions:3, visibility:'full', reserve:780000, tieBreak:'earliest' },
+      bids:[
+        {ts:relTime(-2,-40), vendorId:'v3', vendorName:'Anand Engineering Works', price:905000, type:'bid'},
+        {ts:relTime(-2,-33), vendorId:'v2', vendorName:'Precision Rotodyne Pvt Ltd', price:898000, type:'bid'},
+        {ts:relTime(-2,-27), vendorId:'v4', vendorName:'Konkan Industrial Traders', price:889000, type:'bid'},
+        {ts:relTime(-2,-19), vendorId:'v3', vendorName:'Anand Engineering Works', price:874000, type:'bid'},
+        {ts:relTime(-2,-11), vendorId:'v2', vendorName:'Precision Rotodyne Pvt Ltd', price:858000, type:'bid'},
+        {ts:relTime(-2,-6), vendorId:'v3', vendorName:'Anand Engineering Works', price:846000, type:'bid'},
+        {ts:relTime(-2,-1), vendorId:'v4', vendorName:'Konkan Industrial Traders', price:849500, type:'bid'},
+      ],
+      vendors:{}, bots:{}, humanVendorId:null,
+      startedAt:null, endsAt:null, extensionsUsed:1,
+      finalRanking:[
+        {vendorId:'v3', vendorName:'Anand Engineering Works', rate:846000, rank:1},
+        {vendorId:'v4', vendorName:'Konkan Industrial Traders', rate:849500, rank:2},
+        {vendorId:'v2', vendorName:'Precision Rotodyne Pvt Ltd', rate:858000, rank:3},
+      ],
+      sentAt: relTimeStr(-2, 45), sentBy:'Ritu Menon — Auction Team',
+    },
+  };
+}
+function relDate(daysFromNow){
+  const d = new Date(Date.now() + daysFromNow*86400000);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) + ', 18:00';
+}
+function relTime(daysAgo, minOffset){
+  return new Date(Date.now() + daysAgo*86400000 + minOffset*60000);
+}
+function relTimeStr(daysAgo, minOffset){
+  const d = relTime(daysAgo, minOffset);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ', ' + fmtTime(d);
+}
+
+/* bot walk-away thresholds (hidden — simulate real vendor cost floors) */
+const BOT_WALKAWAY = {
+  english: { v1:1610000, v2:1640000, v3:1690000, v4:1720000 },
+  japanese:{ v4:3700000, v5:3550000, v6:3480000, v7:3420000 },
+};
+
+var auctions = freshAuctions();
+var currentUser = null; // {type:'team'} or {type:'vendor', id:'v2'}
+var currentView = 'login';
+var currentAuctionId = null;
+var engineHandle = null;
+var lastNotifiedRank = {}; // auctionId -> {vendorId: rank}
+var vendorBidFeedback = {}; // auctionId -> {ok, message, ts} — persists on screen until the next bid attempt
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+var pendingRole = null;
+function selectRole(role){
+  pendingRole = role;
+  document.getElementById('role-card-team').classList.toggle('selected', role==='team');
+  document.getElementById('role-card-vendor').classList.toggle('selected', role==='vendor');
+  document.getElementById('vendor-select-wrap').classList.toggle('hidden', role!=='vendor');
+  if(role==='vendor'){
+    const sel = document.getElementById('vendor-select');
+    if(sel.options.length<=1){
+      Object.keys(VENDOR_DIRECTORY).forEach(id=>{
+        const o = document.createElement('option');
+        o.value = id; o.textContent = VENDOR_DIRECTORY[id].name + ' — ' + VENDOR_DIRECTORY[id].city;
+        sel.appendChild(o);
+      });
+    }
+    updateVendorTags();
+  }
+  updateLoginSubmit();
+}
+function updateVendorTags(){
+  const sel = document.getElementById('vendor-select');
+  const wrap = document.getElementById('vendor-tags');
+  wrap.innerHTML='';
+  const v = VENDOR_DIRECTORY[sel.value];
+  if(v){ v.categories.forEach(c=>{ const t=document.createElement('span'); t.className='tag'; t.textContent=c; wrap.appendChild(t); }); }
+}
+document.getElementById('vendor-select').addEventListener('change', ()=>{ updateVendorTags(); updateLoginSubmit(); });
+function updateLoginSubmit(){
+  const btn = document.getElementById('login-submit');
+  if(pendingRole==='team'){ btn.disabled=false; btn.textContent='Enter Auction Desk'; }
+  else if(pendingRole==='vendor'){
+    const sel = document.getElementById('vendor-select');
+    btn.disabled = !sel.value;
+    btn.textContent = 'Enter Vendor Portal';
+  } else { btn.disabled=true; btn.textContent='Continue'; }
+}
+function doLogin(){
+  if(pendingRole==='team'){ currentUser = {type:'team', name:'Ritu Menon'}; }
+  else{
+    const id = document.getElementById('vendor-select').value;
+    if(!id) return;
+    currentUser = {type:'vendor', id, name:VENDOR_DIRECTORY[id].name};
+  }
+  document.getElementById('view-login').classList.add('hidden');
+  document.getElementById('shell').classList.remove('hidden');
+  renderIdentityChip();
+  if(!engineHandle) engineHandle = setInterval(engineTick, 1000);
+  navigate(currentUser.type==='team' ? 'desk' : 'vendor-home');
+}
+function signOut(){
+  currentUser = null;
+  document.getElementById('shell').classList.add('hidden');
+  document.getElementById('view-login').classList.remove('hidden');
+  pendingRole=null;
+  document.getElementById('role-card-team').classList.remove('selected');
+  document.getElementById('role-card-vendor').classList.remove('selected');
+  document.getElementById('vendor-select-wrap').classList.add('hidden');
+  document.getElementById('vendor-select').value='';
+  updateLoginSubmit();
+}
+function resetDemo(){ location.reload(); }
+function renderIdentityChip(){
+  const el = document.getElementById('identity-chip');
+  if(currentUser.type==='team'){
+    el.innerHTML = `<div class="avatar">RM</div><div><div style="font-weight:500;">Ritu Menon</div><div class="role-tag">Auction Team</div></div>`;
+  } else {
+    const initials = currentUser.name.split(' ').map(w=>w[0]).slice(0,2).join('');
+    el.innerHTML = `<div class="avatar">${initials}</div><div><div style="font-weight:500;">${currentUser.name}</div><div class="role-tag">Vendor</div></div>`;
+  }
+}
+
+/* ============================================================
+   NAV / ROUTER
+   ============================================================ */
+function navigate(view, auctionId){
+  currentView = view;
+  currentAuctionId = auctionId || null;
+  ['desk','configure','live-internal','review','vendor-home','live-vendor'].forEach(v=>{
+    document.getElementById('view-'+v).classList.toggle('hidden', v!==view);
+  });
+  renderCrumbs();
+  render();
+}
+function renderCrumbs(){
+  const el = document.getElementById('crumbs');
+  let root = currentUser.type==='team'
+    ? `<button class="crumb-link" onclick="navigate('desk')">Auction Desk</button>`
+    : `<button class="crumb-link" onclick="navigate('vendor-home')">My Auctions</button>`;
+  let segs = [root];
+  if(currentAuctionId){
+    const a = auctions[currentAuctionId];
+    const label = {configure:'Configure', 'live-internal':'Live', 'review':'Result review', 'live-vendor':'Live'}[currentView] || '';
+    segs.push(`<span class="sep">/</span><span class="seg">${a.id}</span>`);
+    if(label) segs.push(`<span class="sep">/</span><span class="seg current">${label}</span>`);
+  } else if(currentView!=='desk' && currentView!=='vendor-home'){
+    segs.push(`<span class="sep">/</span><span class="seg current">${currentView}</span>`);
+  }
+  el.innerHTML = segs.join('');
+}
+function render(){
+  if(currentView==='desk') renderDesk();
+  else if(currentView==='configure') renderConfigure(currentAuctionId);
+  else if(currentView==='live-internal') renderLiveInternal(currentAuctionId);
+  else if(currentView==='review') renderReview(currentAuctionId);
+  else if(currentView==='vendor-home') renderVendorHome();
+  else if(currentView==='live-vendor') renderLiveVendor(currentAuctionId);
+}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function toast(title, body, kind){
+  kind = kind || 'tinfo';
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.innerHTML = `<b>${title}</b>${body||''}`;
+  c.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 260); }, 4200);
+}
+
+/* ============================================================
+   AUCTION DESK (Auction Team queue)
+   ============================================================ */
+function statusPillHTML(a){
+  const map = {
+    referred: ['referred','Referred — awaiting configuration'],
+    live: ['live','Live now'],
+    closed_pending_review: ['review','Closed — pending review'],
+    sent_to_tc: ['sent','Sent to TC Desk'],
+  };
+  const [cls,label] = map[a.status];
+  const dot = a.status==='live' ? '<span class="dot"></span>' : '';
+  return `<span class="status-pill ${cls}">${dot}${label}</span>`;
+}
+function deskActionHTML(a){
+  if(a.status==='referred') return `<button class="btn btn-primary btn-sm" onclick="openConfigure('${a.id}')">Configure auction</button>`;
+  if(a.status==='live') return `<button class="btn btn-dark btn-sm" onclick="navigate('live-internal','${a.id}')">Enter live console</button>`;
+  if(a.status==='closed_pending_review') return `<button class="btn btn-primary btn-sm" onclick="navigate('review','${a.id}')">Review result</button>`;
+  return `<button class="btn btn-secondary btn-sm" onclick="navigate('review','${a.id}')">View summary</button>`;
+}
+function renderDesk(){
+  const el = document.getElementById('view-desk');
+  const list = Object.values(auctions);
+  el.innerHTML = `
+    <div class="page-head">
+      <div>
+        <h1>Auction Desk</h1>
+        <div class="lede">Purchase requisition threads referred here by the Techno-Commercial Desk for a live reverse auction.</div>
+      </div>
+    </div>
+    <div class="scope-strip">
+      <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="#948C7C" stroke-width="1.4"><circle cx="8" cy="8" r="6.3"/><path d="M8 5v3.2l2.1 1.3"/></svg>
+      <div><b>How a thread gets here:</b> the TC buyer awards L1 directly on most RFQs. A thread only lands on this desk when TC explicitly refers it — control transfers back only when this desk explicitly sends a result (BR-06).</div>
+    </div>
+    <div class="thread-list">
+      ${list.map(a=>`
+        <div class="thread-card">
+          <div class="thread-main">
+            <div class="thread-id">${a.id}</div>
+            <div class="thread-info">
+              <h3>${a.title}</h3>
+              <div class="thread-meta">
+                <span>${a.category}</span>
+                <span class="dim">·</span>
+                <span>${a.qty}</span>
+                <span class="dim">·</span>
+                <span>TC: ${a.tcBuyer}</span>
+                <span class="dim">·</span>
+                <span>${a.invitees.length} invited vendors</span>
+              </div>
+            </div>
+          </div>
+          <div class="thread-side">
+            ${statusPillHTML(a)}
+            ${deskActionHTML(a)}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/* ============================================================
+   CONFIGURE AUCTION
+   ============================================================ */
+function defaultConfig(format){
+  if(format==='english'){
+    return { ceiling:1850000, decrementType:'absolute', decrementValue:5000, durationMin:5,
+              autoExtend:true, triggerWindowSec:45, extensionLengthSec:45, maxExtensions:3,
+              visibility:'full', reserve:1580000, tieBreak:'earliest' };
+  }
+  return { startingPrice:4200000, tickDecrement:50000, tickIntervalSec:12, responseWindowSec:7,
+            autoDrop:true, minVendorsRemaining:2, floorPrice:3400000 };
+}
+function openConfigure(id){
+  const a = auctions[id];
+  if(!a.format){ a.format = id==='THR-2044' ? 'japanese' : 'english'; }
+  if(!a.config) a.config = defaultConfig(a.format);
+  if(!a.selectedInvitees) a.selectedInvitees = [...a.invitees];
+  navigate('configure', id);
+}
+function setFormat(id, fmt){
+  const a = auctions[id];
+  a.format = fmt;
+  a.config = defaultConfig(fmt);
+  renderConfigure(id);
+}
+function updateCfgField(id, key, val, isNumber){
+  const a = auctions[id];
+  a.config[key] = isNumber ? Number(val) : val;
+  renderConfigure(id, true);
+}
+function toggleCfgBool(id, key){
+  const a = auctions[id];
+  a.config[key] = !a.config[key];
+  renderConfigure(id);
+}
+function toggleInvitee(id, vid){
+  const a = auctions[id];
+  const i = a.selectedInvitees.indexOf(vid);
+  if(i>-1) a.selectedInvitees.splice(i,1); else a.selectedInvitees.push(vid);
+  renderConfigure(id, true);
+}
+
+function renderConfigure(id, skipScroll){
+  const a = auctions[id];
+  const el = document.getElementById('view-configure');
+  const c = a.config;
+  const isEng = a.format==='english';
+
+  el.innerHTML = `
+    <button class="back-link" onclick="navigate('desk')">← Auction Desk</button>
+    <div class="page-head">
+      <div>
+        <h1>Configure — ${a.title}</h1>
+        <div class="lede">${a.id} · ${a.category} · ${a.qty} · referred by ${a.tcBuyer}</div>
+      </div>
+    </div>
+
+    <div class="config-grid">
+      <div>
+        <div class="panel">
+          <h3>Auction format</h3>
+          <div class="panel-sub">FR-30 — the configuration fields below differ by format.</div>
+          <div class="format-toggle">
+            <div class="format-opt ${isEng?'active':''}" onclick="setFormat('${a.id}','english')">
+              <b>English Reverse</b>
+              <span>Open descending price. Vendors submit undercutting bids until time runs out.</span>
+            </div>
+            <div class="format-opt ${!isEng?'active':''}" onclick="setFormat('${a.id}','japanese')">
+              <b>Japanese (Descending Clock)</b>
+              <span>System calls a falling price. Vendors confirm Stay or Drop at each tick.</span>
+            </div>
+          </div>
+        </div>
+
+        ${isEng ? renderEnglishConfigForm(a) : renderJapaneseConfigForm(a)}
+
+        <div class="panel">
+          <h3>Invited vendors</h3>
+          <div class="panel-sub">Carried over from the RFQ vendor list. Uncheck to exclude a vendor from this auction specifically.</div>
+          <div class="invitee-list">
+            ${a.invitees.map(vid=>{
+              const v = VENDOR_DIRECTORY[vid];
+              const checked = a.selectedInvitees.includes(vid);
+              return `<div class="invitee-row">
+                <input type="checkbox" ${checked?'checked':''} onchange="toggleInvitee('${a.id}','${vid}')">
+                <div>
+                  <div class="invitee-name">${v.name}</div>
+                  <div class="invitee-meta">${v.city} · rating ${v.rating}</div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="side-summary">
+        <div class="panel">
+          <h3>Ready to go live</h3>
+          <div class="panel-sub">FR-34 — there's no separate scheduled start. The auction becomes live and biddable to invited vendors the moment you confirm.</div>
+          <div class="summary-row"><span class="k">Format</span><span class="v">${isEng?'English Reverse':'Japanese Clock'}</span></div>
+          <div class="summary-row"><span class="k">${isEng?'Ceiling price':'Starting price'}</span><span class="v">${fmtINR(isEng?c.ceiling:c.startingPrice)}</span></div>
+          <div class="summary-row"><span class="k">${isEng?'Duration':'Floor price'}</span><span class="v">${isEng? c.durationMin+' min' : fmtINR(c.floorPrice)}</span></div>
+          <div class="summary-row"><span class="k">Invited vendors</span><span class="v">${a.selectedInvitees.length} of ${a.invitees.length}</span></div>
+          <button class="btn btn-primary btn-block" style="margin-top:16px;" ${a.selectedInvitees.length<2?'disabled':''} onclick="goLive('${a.id}')">Go live now</button>
+          ${a.selectedInvitees.length<2 ? '<div class="callout warn" style="margin-top:10px;">At least 2 invited vendors are needed to run a competitive auction.</div>' : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEnglishConfigForm(a){
+  const c = a.config;
+  return `
+    <div class="panel">
+      <h3>Price &amp; decrement</h3>
+      <div class="panel-sub">FR-31</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Ceiling / starting price <span class="hint">— visible to all bidders (BR-07)</span></label>
+          <div class="input-prefix"><span>₹</span><input type="number" value="${c.ceiling}" onchange="updateCfgField('${a.id}','ceiling',this.value,true)"></div>
+        </div>
+        <div class="field">
+          <label>Hidden reserve price <span class="hint">— internal only</span></label>
+          <div class="input-prefix"><span>₹</span><input type="number" value="${c.reserve}" onchange="updateCfgField('${a.id}','reserve',this.value,true)"></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Decrement type</label>
+          <select onchange="updateCfgField('${a.id}','decrementType',this.value,false)">
+            <option value="absolute" ${c.decrementType==='absolute'?'selected':''}>Absolute (₹)</option>
+            <option value="percentage" ${c.decrementType==='percentage'?'selected':''}>Percentage (%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Minimum decrement</label>
+          <div class="input-prefix"><span>${c.decrementType==='absolute'?'₹':'%'}</span><input type="number" value="${c.decrementValue}" onchange="updateCfgField('${a.id}','decrementValue',this.value,true)"></div>
+        </div>
+      </div>
+      <div class="callout info">Each new bid must undercut the vendor's own previous bid by at least this decrement, or it's rejected with an on-screen reason (FR-35).</div>
+    </div>
+
+    <div class="panel">
+      <h3>Timing &amp; visibility</h3>
+      <div class="field-row">
+        <div class="field">
+          <label>Duration <span class="hint">(minutes — shortened for this prototype; production default 15–30)</span></label>
+          <input type="number" value="${c.durationMin}" onchange="updateCfgField('${a.id}','durationMin',this.value,true)">
+        </div>
+        <div class="field">
+          <label>Ranking visibility to vendors</label>
+          <select onchange="updateCfgField('${a.id}','visibility',this.value,false)">
+            <option value="full" ${c.visibility==='full'?'selected':''}>Full price &amp; rank</option>
+            <option value="rank" ${c.visibility==='rank'?'selected':''}>Rank only</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tie-break rule</label>
+        <select onchange="updateCfgField('${a.id}','tieBreak',this.value,false)">
+          <option value="earliest" ${c.tieBreak==='earliest'?'selected':''}>Earliest bid at that price retains rank</option>
+          <option value="manual" ${c.tieBreak==='manual'?'selected':''}>Flag for manual review</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div class="tlabel"><b>Anti-sniping auto-extension</b><span>Extends the clock if a bid lands inside the trigger window</span></div>
+        <label class="switch"><input type="checkbox" ${c.autoExtend?'checked':''} onchange="toggleCfgBool('${a.id}','autoExtend')"><span class="slider"></span></label>
+      </div>
+      ${c.autoExtend ? `
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field">
+          <label>Trigger window (sec before close)</label>
+          <input type="number" value="${c.triggerWindowSec}" onchange="updateCfgField('${a.id}','triggerWindowSec',this.value,true)">
+        </div>
+        <div class="field">
+          <label>Extension length (sec)</label>
+          <input type="number" value="${c.extensionLengthSec}" onchange="updateCfgField('${a.id}','extensionLengthSec',this.value,true)">
+        </div>
+      </div>
+      <div class="field">
+        <label>Max extensions</label>
+        <input type="number" value="${c.maxExtensions}" onchange="updateCfgField('${a.id}','maxExtensions',this.value,true)">
+      </div>` : ''}
+    </div>
+  `;
+}
+function renderJapaneseConfigForm(a){
+  const c = a.config;
+  return `
+    <div class="panel">
+      <h3>Price &amp; ticks</h3>
+      <div class="panel-sub">FR-32</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Starting price <span class="hint">— visible throughout (BR-07)</span></label>
+          <div class="input-prefix"><span>₹</span><input type="number" value="${c.startingPrice}" onchange="updateCfgField('${a.id}','startingPrice',this.value,true)"></div>
+        </div>
+        <div class="field">
+          <label>Floor price</label>
+          <div class="input-prefix"><span>₹</span><input type="number" value="${c.floorPrice}" onchange="updateCfgField('${a.id}','floorPrice',this.value,true)"></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Price decrement per tick</label>
+          <div class="input-prefix"><span>₹</span><input type="number" value="${c.tickDecrement}" onchange="updateCfgField('${a.id}','tickDecrement',this.value,true)"></div>
+        </div>
+        <div class="field">
+          <label>Tick interval (sec)</label>
+          <input type="number" value="${c.tickIntervalSec}" onchange="updateCfgField('${a.id}','tickIntervalSec',this.value,true)">
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Vendor response rules</h3>
+      <div class="field-row">
+        <div class="field">
+          <label>Response window (sec)</label>
+          <input type="number" value="${c.responseWindowSec}" onchange="updateCfgField('${a.id}','responseWindowSec',this.value,true)">
+        </div>
+        <div class="field">
+          <label>Minimum vendors to continue</label>
+          <input type="number" value="${c.minVendorsRemaining}" onchange="updateCfgField('${a.id}','minVendorsRemaining',this.value,true)">
+        </div>
+      </div>
+      <div class="toggle-row">
+        <div class="tlabel"><b>Auto-drop on no response</b><span>A vendor who doesn't confirm within the window is dropped at that tick's price</span></div>
+        <label class="switch"><input type="checkbox" ${c.autoDrop?'checked':''} onchange="toggleCfgBool('${a.id}','autoDrop')"><span class="slider"></span></label>
+      </div>
+      ${!c.autoDrop ? '<div class="callout warn">With auto-drop off, a non-response is treated as an implicit Stay in this prototype — the BRD flags this behaviour as not yet fully specified (§16).</div>' : ''}
+      <div class="callout info">Closes automatically when the floor price is reached or active vendors fall to the minimum — whichever happens first (FR-38).</div>
+    </div>
+  `;
+}
+
+/* go live */
+function goLive(id){
+  const a = auctions[id];
+  a.invitees = [...a.selectedInvitees];
+  a.status = 'live';
+  a.startedAt = Date.now();
+  a.bids = [];
+  a.vendors = {};
+  a.bots = {};
+  a.humanVendorId = currentUser.type==='vendor' ? currentUser.id : null;
+
+  a.invitees.forEach(vid=>{
+    a.vendors[vid] = { active:true, lastBid:null, dropPrice:null, respondedThisWindow:false };
+    a.bots[vid] = { retired:false, walkAway: BOT_WALKAWAY[a.format][vid] || rndInt(0.85,0.95)*a.config.ceiling };
+  });
+
+  if(a.format==='english'){
+    a.endsAt = Date.now() + a.config.durationMin*60000;
+    a.extensionsUsed = 0;
+    a.invitees.forEach(vid=>{ if(vid!==a.humanVendorId) scheduleEnglishBot(a.id, vid, rndInt(4000,14000)); });
+  } else {
+    a.tickToken = 0;
+    a.currentCallPrice = a.config.startingPrice;
+    a.phase = 'awaiting_response';
+    a.windowEndsAt = Date.now() + a.config.responseWindowSec*1000;
+    scheduleJapaneseBotsForWindow(a.id);
+  }
+
+  toast('Auction is live', a.id + ' — invited vendors can now bid.', 'tgood');
+  navigate('live-internal', id);
+}
+
+/* ============================================================
+   ENGLISH ENGINE
+   ============================================================ */
+function scheduleEnglishBot(id, vid, delay){
+  setTimeout(()=>attemptEnglishBot(id, vid), delay);
+}
+function attemptEnglishBot(id, vid){
+  const a = auctions[id];
+  if(!a || a.status!=='live' || a.format!=='english') return;
+  const bot = a.bots[vid];
+  if(!bot || bot.retired) return;
+  if(a.humanVendorId===vid){ scheduleEnglishBot(id, vid, 4000); return; } // paused while human controls this seat
+  const v = a.vendors[vid];
+  const leader = currentLeaderPrice(a);
+  const basisFromLeader = (leader==null ? a.config.ceiling : leader) - a.config.decrementValue*rndInt(1,3);
+  const basisFromSelf = v.lastBid!=null ? v.lastBid - a.config.decrementValue*rndInt(1,2) : Infinity;
+  let candidate = Math.min(basisFromLeader, basisFromSelf);
+  candidate = Math.round(candidate/500)*500;
+  const remaining = a.endsAt - Date.now();
+  if(candidate < bot.walkAway || candidate<=0){
+    bot.retired = true;
+  } else {
+    submitBid(id, vid, candidate, true);
+  }
+  if(!bot.retired && a.status==='live'){
+    const delay = remaining < 60000 ? rndInt(4000,11000) : rndInt(9000,28000);
+    scheduleEnglishBot(id, vid, delay);
+  }
+}
+function currentLeaderPrice(a){
+  let best=null;
+  Object.values(a.vendors).forEach(v=>{ if(v.lastBid!=null && (best===null || v.lastBid<best)) best=v.lastBid; });
+  return best;
+}
+function rankedVendorsEnglish(a){
+  const rows = a.invitees.map(vid=>({vid, name:VENDOR_DIRECTORY[vid].name, bid:a.vendors[vid].lastBid}));
+  const bidders = rows.filter(r=>r.bid!=null).sort((x,y)=>x.bid-y.bid);
+  const nobid = rows.filter(r=>r.bid==null);
+  bidders.forEach((r,i)=>r.rank=i+1);
+  return {bidders, nobid};
+}
+function submitBid(id, vid, price, isBot){
+  const a = auctions[id];
+  const v = a.vendors[vid];
+  const dec = a.config.decrementType==='percentage'
+    ? Math.round((v.lastBid ?? a.config.ceiling) * (a.config.decrementValue/100))
+    : a.config.decrementValue;
+  const basis = v.lastBid ?? a.config.ceiling;
+  const maxValid = basis - dec;
+  if(price > maxValid || price<=0){
+    return { ok:false, message:`Your bid must be at least ${fmtINR(dec)} lower than your last accepted bid of ${fmtINR(basis)}. Minimum valid bid: ${fmtINR(maxValid)} or lower.` };
+  }
+  v.lastBid = price;
+  a.bids.push({ts:new Date(), vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, price, type:'bid'});
+
+  // anti-sniping
+  const remaining = a.endsAt - Date.now();
+  if(a.config.autoExtend && remaining < a.config.triggerWindowSec*1000 && a.extensionsUsed < a.config.maxExtensions){
+    a.endsAt += a.config.extensionLengthSec*1000;
+    a.extensionsUsed++;
+    a.bids.push({ts:new Date(), type:'system', message:`Auto-extension triggered (+${a.config.extensionLengthSec}s) — bid landed inside the anti-sniping window.`});
+  }
+  notifyEnglish(a, vid);
+  if(currentAuctionId===id && (currentView==='live-internal' || currentView==='live-vendor')) render();
+  return {ok:true};
+}
+function notifyEnglish(a, biddingVid){
+  lastNotifiedRank[a.id] = lastNotifiedRank[a.id] || {};
+  const {bidders} = rankedVendorsEnglish(a);
+  if(currentView==='live-internal' && currentAuctionId===a.id){
+    const row = bidders.find(b=>b.vid===biddingVid);
+    if(row) toast('New bid received', `${row.name} — ${fmtINR(row.bid)} (now L${row.rank})`, row.rank===1?'tgood':'tinfo');
+  }
+  if(currentView==='live-vendor' && currentAuctionId===a.id && a.humanVendorId){
+    const row = bidders.find(b=>b.vid===a.humanVendorId);
+    const newRank = row ? row.rank : null;
+    const prevRank = lastNotifiedRank[a.id][a.humanVendorId];
+    if(newRank && newRank!==prevRank && biddingVid!==a.humanVendorId){
+      toast(newRank===1?"You're back in the lead — L1":`Your rank changed — L${newRank}`, '', newRank===1?'tgood':'twarn');
+    }
+  }
+  bidders.forEach(b=>{ lastNotifiedRank[a.id][b.vid] = b.rank; });
+}
+function finalizeEnglish(a){
+  const {bidders, nobid} = rankedVendorsEnglish(a);
+  a.finalRanking = bidders.map(b=>({vendorId:b.vid, vendorName:b.name, rate:b.bid, rank:b.rank}))
+    .concat(nobid.map(b=>({vendorId:b.vid, vendorName:b.name, rate:null, rank:null})));
+  a.status = 'closed_pending_review';
+  a.bids.push({ts:new Date(), type:'system', message:'Auction closed — duration elapsed. Final ranking computed.'});
+  if(currentAuctionId===a.id) render();
+  if(currentView==='live-internal' && currentAuctionId===a.id) toast('Auction closed', 'Final ranking is ready for review.', 'tgood');
+}
+
+/* ============================================================
+   JAPANESE ENGINE
+   ============================================================ */
+function scheduleJapaneseBotsForWindow(id){
+  const a = auctions[id];
+  const token = a.tickToken;
+  a.invitees.forEach(vid=>{
+    const v = a.vendors[vid];
+    if(!v.active || vid===a.humanVendorId) return;
+    const delay = rnd(0.3,0.85)*a.config.responseWindowSec*1000;
+    setTimeout(()=>botRespond(id, vid, token), delay);
+  });
+}
+function botRespond(id, vid, token){
+  const a = auctions[id];
+  if(!a || a.status!=='live' || a.format!=='japanese' || a.tickToken!==token) return;
+  const v = a.vendors[vid];
+  if(!v.active || v.respondedThisWindow) return;
+  const bot = a.bots[vid];
+  const stays = a.currentCallPrice > bot.walkAway;
+  if(stays){
+    v.respondedThisWindow = true;
+    a.bids.push({ts:new Date(), vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, price:a.currentCallPrice, type:'stay'});
+  } else {
+    dropVendor(a, vid);
+  }
+  if(currentAuctionId===id && currentView==='live-internal') render();
+  maybeFinalizeJapanese(a);
+}
+function dropVendor(a, vid){
+  const v = a.vendors[vid];
+  if(!v.active) return;
+  v.active = false;
+  v.dropPrice = a.currentCallPrice;
+  v.respondedThisWindow = true;
+  a.bids.push({ts:new Date(), vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, price:a.currentCallPrice, type:'drop'});
+  if(currentView==='live-vendor' && currentAuctionId===a.id && a.humanVendorId===vid){
+    toast('You dropped out', `Locked out at ${fmtINR(a.currentCallPrice)}.`, 'twarn');
+  }
+  if(currentView==='live-internal' && currentAuctionId===a.id){
+    toast('Vendor dropped', `${VENDOR_DIRECTORY[vid].name} exited at ${fmtINR(a.currentCallPrice)}.`, 'twarn');
+  }
+}
+function humanRespond(id, action){
+  const a = auctions[id];
+  if(a.phase!=='awaiting_response') return;
+  const v = a.vendors[a.humanVendorId];
+  if(!v.active || v.respondedThisWindow) return;
+  if(action==='stay'){
+    v.respondedThisWindow = true;
+    a.bids.push({ts:new Date(), vendorId:a.humanVendorId, vendorName:currentUser.name, price:a.currentCallPrice, type:'stay'});
+    toast('Confirmed — staying in', `Holding at ${fmtINR(a.currentCallPrice)}.`, 'tgood');
+  } else {
+    dropVendor(a, a.humanVendorId);
+  }
+  render();
+  maybeFinalizeJapanese(a);
+}
+function activeVendorCount(a){ return a.invitees.filter(vid=>a.vendors[vid].active).length; }
+function maybeFinalizeJapanese(a){
+  if(a.status!=='live') return;
+  if(activeVendorCount(a) <= a.config.minVendorsRemaining){
+    finalizeJapanese(a, 'Minimum active-vendor threshold reached.');
+  }
+}
+function closeJapaneseWindow(id){
+  const a = auctions[id];
+  if(!a || a.status!=='live' || a.format!=='japanese') return;
+  // auto-drop / implicit-stay for non-responders
+  a.invitees.forEach(vid=>{
+    const v = a.vendors[vid];
+    if(v.active && !v.respondedThisWindow){
+      if(a.config.autoDrop) dropVendor(a, vid);
+      else { a.bids.push({ts:new Date(), vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, price:a.currentCallPrice, type:'stay'}); }
+    }
+  });
+  if(a.status!=='live') return; // may have finalized during drops
+  if(activeVendorCount(a) <= a.config.minVendorsRemaining){
+    finalizeJapanese(a, 'Minimum active-vendor threshold reached.'); return;
+  }
+  if(a.currentCallPrice <= a.config.floorPrice){
+    finalizeJapanese(a, 'Floor price reached.'); return;
+  }
+  // transition to next tick
+  a.phase = 'transition';
+  if(currentAuctionId===id) render();
+  setTimeout(()=>{
+    if(!auctions[id] || auctions[id].status!=='live') return;
+    a.currentCallPrice = Math.max(a.config.floorPrice, a.currentCallPrice - a.config.tickDecrement);
+    a.tickToken++;
+    a.invitees.forEach(vid=>{ a.vendors[vid].respondedThisWindow = false; });
+    a.phase = 'awaiting_response';
+    a.windowEndsAt = Date.now() + a.config.responseWindowSec*1000;
+    scheduleJapaneseBotsForWindow(id);
+    if(currentAuctionId===id) render();
+  }, 1300);
+}
+function finalizeJapanese(a, reason){
+  const active = a.invitees.filter(vid=>a.vendors[vid].active);
+  const dropped = a.invitees.filter(vid=>!a.vendors[vid].active)
+    .sort((x,y)=> a.vendors[x].dropPrice - a.vendors[y].dropPrice);
+  let rank=1;
+  const ranking=[];
+  active.forEach(vid=>{ ranking.push({vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, rate:a.currentCallPrice, rank}); });
+  if(active.length) rank = active.length+1;
+  dropped.forEach(vid=>{ ranking.push({vendorId:vid, vendorName:VENDOR_DIRECTORY[vid].name, rate:a.vendors[vid].dropPrice, rank:rank}); rank++; });
+  a.finalRanking = ranking;
+  a.status = 'closed_pending_review';
+  a.bids.push({ts:new Date(), type:'system', message:`Auction closed — ${reason} Final ranking computed.`});
+  if(currentAuctionId===a.id) render();
+  if(currentView==='live-internal' && currentAuctionId===a.id) toast('Auction closed', reason+' Final ranking is ready for review.', 'tgood');
+}
+
+/* ============================================================
+   MASTER ENGINE TICK (1s)
+   ============================================================ */
+function engineTick(){
+  Object.values(auctions).forEach(a=>{
+    if(a.status!=='live') return;
+    if(a.format==='english'){
+      if(Date.now() >= a.endsAt) finalizeEnglish(a);
+      else if(currentAuctionId===a.id && (currentView==='live-internal'||currentView==='live-vendor')) render();
+    } else {
+      if(a.phase==='awaiting_response' && Date.now() >= a.windowEndsAt){ closeJapaneseWindow(a.id); }
+      else if(currentAuctionId===a.id && (currentView==='live-internal'||currentView==='live-vendor')) render();
+    }
+  });
+}
+
+/* ============================================================
+   LIVE — INTERNAL (Auction Team) CONSOLE
+   ============================================================ */
+function renderLiveInternal(id){
+  const a = auctions[id];
+  if(!a){ return; }
+  if(a.status!=='live' && a.status!=='closed_pending_review' && a.status!=='sent_to_tc'){ navigate('desk'); return; }
+  if(a.status!=='live'){ navigate('review', id); return; }
+  const el = document.getElementById('view-live-internal');
+
+  if(a.format==='english'){
+    const remaining = a.endsAt - Date.now();
+    const {bidders, nobid} = rankedVendorsEnglish(a);
+    const leader = bidders[0];
+    el.innerHTML = `
+      <button class="back-link" onclick="navigate('desk')">← Auction Desk</button>
+      <div class="live-shell">
+        <div class="live-top">
+          <div class="live-top-l"><h2>${a.title}</h2><div class="sub">${a.id} · English Reverse · ${a.invitees.length} bidders invited</div></div>
+          <div class="timer-block"><div class="tlabel">Time remaining</div><div class="tval ${remaining<30000?'urgent':''}">${fmtClock(remaining)}</div></div>
+        </div>
+        <div class="live-body">
+          <div>
+            <div class="price-strip">
+              <div class="price-block"><div class="plabel">Ceiling</div><div class="pval dim">${fmtINR(a.config.ceiling)}</div></div>
+              <div class="price-block"><div class="plabel">Current L1</div><div class="pval">${leader?fmtINR(leader.bid):'— no bids yet'}</div></div>
+              <div class="price-block"><div class="plabel">Reserve</div><div class="pval dim">${fmtINR(a.config.reserve)} <span style="font-size:10px;">(hidden from vendors)</span></div></div>
+            </div>
+            <div class="rank-table">
+              <div class="rank-head-row"><span>Rank</span><span>Vendor</span><span style="text-align:right;">Bid</span><span style="text-align:right;">Status</span></div>
+              ${bidders.map(b=>`
+                <div class="rank-row ${b.rank===1?'l1':''}">
+                  <span class="r-rank">L${b.rank}</span>
+                  <span class="r-name">${b.name}${b.vid===a.humanVendorId?'<small>You (this seat)</small>':''}</span>
+                  <span class="r-price">${fmtINR(b.bid)}</span>
+                  <span class="r-status ${b.vid===a.humanVendorId?'you':''}">${b.vid===a.humanVendorId?'Your seat':''}</span>
+                </div>`).join('')}
+              ${nobid.map(b=>`
+                <div class="rank-row"><span class="r-rank">—</span><span class="r-name">${b.name}</span><span class="r-price">No bid yet</span><span class="r-status"></span></div>`).join('')}
+            </div>
+          </div>
+          <div>
+            <div class="live-side-panel">
+              <h4>Auction parameters</h4>
+              <div class="meta-line"><span class="k">Min. decrement</span><span class="v">${a.config.decrementType==='absolute'?fmtINR(a.config.decrementValue):a.config.decrementValue+'%'}</span></div>
+              <div class="meta-line"><span class="k">Visibility to vendors</span><span class="v">${a.config.visibility==='full'?'Full price':'Rank only'}</span></div>
+              <div class="meta-line"><span class="k">Auto-extensions used</span><span class="v">${a.extensionsUsed} / ${a.config.autoExtend?a.config.maxExtensions:0}</span></div>
+              <div class="meta-line"><span class="k">Tie-break rule</span><span class="v">${a.config.tieBreak==='earliest'?'Earliest bid':'Manual review'}</span></div>
+            </div>
+            ${auditLogPanel(a)}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    renderLiveInternalJapanese(a, el);
+  }
+}
+function renderLiveInternalJapanese(a, el){
+  const active = a.invitees.filter(vid=>a.vendors[vid].active);
+  const droppedSorted = a.invitees.filter(vid=>!a.vendors[vid].active).sort((x,y)=>a.vendors[y].dropPrice-a.vendors[x].dropPrice);
+  const winRemaining = a.phase==='awaiting_response' ? a.windowEndsAt-Date.now() : 0;
+  el.innerHTML = `
+    <button class="back-link" onclick="navigate('desk')">← Auction Desk</button>
+    <div class="live-shell">
+      <div class="live-top">
+        <div class="live-top-l"><h2>${a.title}</h2><div class="sub">${a.id} · Japanese Descending Clock · ${a.invitees.length} bidders invited</div></div>
+        <div class="timer-block"><div class="tlabel">${a.phase==='transition'?'Calling next price':'Response window'}</div><div class="tval ${winRemaining<3000 && a.phase==='awaiting_response'?'urgent':''}">${a.phase==='transition'?'···':fmtClock(winRemaining)}</div></div>
+      </div>
+      <div class="live-body">
+        <div>
+          <div class="price-strip">
+            <div class="price-block"><div class="plabel">Starting price</div><div class="pval dim">${fmtINR(a.config.startingPrice)}</div></div>
+            <div class="price-block"><div class="plabel">Current call price</div><div class="pval">${fmtINR(a.currentCallPrice)}</div></div>
+            <div class="price-block"><div class="plabel">Floor</div><div class="pval dim">${fmtINR(a.config.floorPrice)}</div></div>
+          </div>
+          <div class="rank-table">
+            <div class="rank-head-row"><span>Status</span><span>Vendor</span><span style="text-align:right;">Price</span><span style="text-align:right;">Responded</span></div>
+            ${active.map(vid=>{
+              const v=a.vendors[vid];
+              return `<div class="rank-row l1">
+                <span class="r-rank">Active</span>
+                <span class="r-name">${VENDOR_DIRECTORY[vid].name}${vid===a.humanVendorId?'<small>You (this seat)</small>':''}</span>
+                <span class="r-price">${fmtINR(a.currentCallPrice)}</span>
+                <span class="r-status ${v.respondedThisWindow?'you':''}">${v.respondedThisWindow?'✓ confirmed':'awaiting'}</span>
+              </div>`;
+            }).join('')}
+            ${droppedSorted.map(vid=>`
+              <div class="rank-row"><span class="r-rank">Out</span><span class="r-name">${VENDOR_DIRECTORY[vid].name}</span><span class="r-price">${fmtINR(a.vendors[vid].dropPrice)}</span><span class="r-status dropped">dropped</span></div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="live-side-panel">
+            <h4>Clock parameters</h4>
+            <div class="meta-line"><span class="k">Tick decrement</span><span class="v">${fmtINR(a.config.tickDecrement)}</span></div>
+            <div class="meta-line"><span class="k">Tick interval</span><span class="v">${a.config.tickIntervalSec}s</span></div>
+            <div class="meta-line"><span class="k">Response window</span><span class="v">${a.config.responseWindowSec}s</span></div>
+            <div class="meta-line"><span class="k">Min. vendors to continue</span><span class="v">${a.config.minVendorsRemaining}</span></div>
+            <div class="meta-line"><span class="k">Auto-drop on silence</span><span class="v">${a.config.autoDrop?'On':'Off'}</span></div>
+          </div>
+          ${auditLogPanel(a)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function auditLogPanel(a){
+  const rows = a.bids.slice().reverse();
+  return `
+    <div class="log-panel">
+      <div class="log-head"><h4>Audit log — append only</h4><button class="log-export" onclick="exportLog('${a.id}')">Export CSV</button></div>
+      <div class="log-body">
+        ${rows.length===0 ? '<div class="log-row"><span class="lc">No activity yet.</span></div>' : rows.map(r=>{
+          const t = fmtTime(new Date(r.ts));
+          if(r.type==='system') return `<div class="log-row sys"><span class="lt">${t}</span><span class="lc">${r.message}</span></div>`;
+          if(r.type==='drop') return `<div class="log-row drop"><span class="lt">${t}</span><span class="lc"><b>${r.vendorName}</b> dropped out at ${fmtINR(r.price)}</span></div>`;
+          if(r.type==='stay') return `<div class="log-row"><span class="lt">${t}</span><span class="lc"><b>${r.vendorName}</b> confirmed stay at ${fmtINR(r.price)}</span></div>`;
+          return `<div class="log-row"><span class="lt">${t}</span><span class="lc"><b>${r.vendorName}</b> bid ${fmtINR(r.price)}</span></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+function exportLog(id){
+  const a = auctions[id];
+  let csv = 'timestamp,vendor,type,price\n';
+  a.bids.forEach(r=>{
+    const t = new Date(r.ts).toISOString();
+    csv += `${t},${(r.vendorName||'SYSTEM').replace(/,/g,' ')},${r.type},${r.price||''}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = a.id+'-audit-log.csv';
+  document.body.appendChild(link); link.click(); link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   RESULT REVIEW + HAND-OFF
+   ============================================================ */
+function renderReview(id){
+  const a = auctions[id];
+  const el = document.getElementById('view-review');
+  const ranking = a.finalRanking || [];
+  const l1 = ranking.find(r=>r.rank===1);
+  const respondedCount = ranking.filter(r=>r.rate!=null).length;
+  const reserveMet = a.format==='english' && l1 ? l1.rate <= a.config.reserve : null;
+
+  el.innerHTML = `
+    <button class="back-link" onclick="navigate('desk')">← Auction Desk</button>
+    <div class="page-head">
+      <div>
+        <h1>${a.status==='sent_to_tc' ? 'Result summary' : 'Result review'} — ${a.title}</h1>
+        <div class="lede">${a.id} · ${a.format==='english'?'English Reverse':'Japanese Descending Clock'} · referred by ${a.tcBuyer}</div>
+      </div>
+    </div>
+
+    ${respondedCount<2 ? `<div class="banner amber"><div>⚠</div><div><b>Only ${respondedCount} vendor${respondedCount===1?'':'s'} produced a competitive rate.</b>The BRD flags single/zero-bidder outcomes as an open item (§16) — recommend manual review before this result is sent onward.</div></div>` : ''}
+    ${reserveMet===false ? `<div class="banner amber"><div>⚠</div><div><b>Reserve not met.</b>L1 (${fmtINR(l1.rate)}) is above the hidden reserve of ${fmtINR(a.config.reserve)}.</div></div>` : ''}
+    ${a.status==='sent_to_tc' ? `<div class="banner green"><div>✓</div><div><b>Sent to Techno-Commercial Desk</b>${a.sentAt} by ${a.sentBy}. This thread is now back with ${a.tcBuyer} for vendor selection approval.</div></div>` : ''}
+
+    <div class="panel">
+      <h3>Final ranking</h3>
+      <div class="panel-sub">Computed view over the immutable bid/tick log — never a directly editable field (FR-39).</div>
+      <table class="result-table">
+        <thead><tr><th>Rank</th><th>Vendor</th><th class="num">Final rate</th><th class="num">${a.format==='english'?'vs. ceiling':'vs. starting price'}</th></tr></thead>
+        <tbody>
+          ${ranking.map(r=>{
+            const base = a.format==='english' ? a.config.ceiling : a.config.startingPrice;
+            const delta = r.rate!=null ? (((r.rate-base)/base)*100).toFixed(1)+'%' : '—';
+            return `<tr class="${r.rank===1?'winner':''}">
+              <td><span class="rank-badge ${r.rank===1?'l1':''}">${r.rank ?? '—'}</span></td>
+              <td>${r.vendorName}</td>
+              <td class="num">${r.rate!=null?fmtINR(r.rate):'No bid submitted'}</td>
+              <td class="num">${delta}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${a.status!=='sent_to_tc' ? `
+      <div class="sendoff-box">
+        <div class="stext">Closing the auction does not notify the TC Desk automatically — this is a deliberate hand-off point (BR-06, FR-40). Sending makes the full ranking visible in ${a.tcBuyer}'s queue.</div>
+        <button class="btn btn-primary" onclick="sendResult('${a.id}')">Send result to Techno-Commercial Desk</button>
+      </div>` : ''}
+    </div>
+
+    ${auditLogPanelLight(a)}
+  `;
+}
+function auditLogPanelLight(a){
+  const rows = a.bids.slice().reverse();
+  return `
+    <div class="panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <h3 style="margin-bottom:0;">Audit log</h3>
+        <button class="btn btn-secondary btn-sm" onclick="exportLog('${a.id}')">Export CSV</button>
+      </div>
+      <div class="panel-sub">Every bid or stay/drop decision, timestamped and attributed — exportable for compliance review (§13.4).</div>
+      <table class="result-table">
+        <thead><tr><th>Time</th><th>Vendor</th><th>Action</th><th class="num">Price</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`<tr>
+            <td class="mono">${fmtTime(new Date(r.ts))}</td>
+            <td>${r.vendorName || 'System'}</td>
+            <td>${({bid:'Bid submitted', stay:'Confirmed stay', drop:'Dropped out', system:r.message})[r.type]}</td>
+            <td class="num">${r.price?fmtINR(r.price):''}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function sendResult(id){
+  const a = auctions[id];
+  a.status = 'sent_to_tc';
+  a.sentAt = nowStamp();
+  a.sentBy = 'Ritu Menon — Auction Team';
+  toast('Result sent', `${a.id} is back in ${a.tcBuyer}'s queue for vendor selection approval.`, 'tgood');
+  renderReview(id);
+}
+
+/* ============================================================
+   VENDOR HOME
+   ============================================================ */
+function renderVendorHome(){
+  const vid = currentUser.id;
+  const el = document.getElementById('view-vendor-home');
+  const my = Object.values(auctions).filter(a=>a.invitees.includes(vid) || (a.status==='referred'));
+  // only show auctions this vendor is actually invited to, and only once configured/live/closed (referred-only threads aren't visible pre-configuration)
+  const visible = Object.values(auctions).filter(a=>a.invitees.includes(vid) && a.status!=='referred');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <div>
+        <h1>My auctions</h1>
+        <div class="lede">Auctions ${VENDOR_DIRECTORY[vid].name} has been invited to. You only see events your company is registered against (§13.3).</div>
+      </div>
+    </div>
+    ${visible.length===0 ? `
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#948C7C" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+        <p>No live or completed auctions right now for this company. Check back once the Auction Desk configures and starts one you're invited to.</p>
+      </div>
+    ` : visible.map(a=>{
+      const statusLabel = {live:'Live now — bidding open', closed_pending_review:'Closed — awaiting Auction Desk review', sent_to_tc:'Closed — result sent to TC Desk'}[a.status];
+      const cls = {live:'live', closed_pending_review:'review', sent_to_tc:'sent'}[a.status];
+      const action = a.status==='live'
+        ? `<button class="btn btn-dark btn-sm" onclick="enterVendorAuction('${a.id}')">Enter live bidding</button>`
+        : `<button class="btn btn-secondary btn-sm" onclick="enterVendorAuction('${a.id}')">View outcome</button>`;
+      return `<div class="vh-card">
+        <div>
+          <h3>${a.title}</h3>
+          <div class="vh-meta">${a.id} · ${a.format==='english'?'English Reverse':'Japanese Clock'} · ${a.qty}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <span class="status-pill ${cls}">${a.status==='live'?'<span class="dot"></span>':''}${statusLabel}</span>
+          ${action}
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+function enterVendorAuction(id){
+  const a = auctions[id];
+  delete vendorBidFeedback[id];
+  if(a.status==='live' && a.humanVendorId==null){
+    a.humanVendorId = currentUser.id;
+    a.bids.push({ts:new Date(), type:'system', message:`${currentUser.name} joined the bidding console.`});
+  }
+  navigate('live-vendor', id);
+}
+
+/* ============================================================
+   LIVE — VENDOR BIDDING CONSOLE
+   ============================================================ */
+function renderLiveVendor(id){
+  const a = auctions[id];
+  const el = document.getElementById('view-live-vendor');
+  const vid = currentUser.id;
+
+  if(a.status!=='live'){
+    const r = (a.finalRanking||[]).find(x=>x.vendorId===vid);
+    const won = r && r.rank===1;
+    el.innerHTML = `
+      <button class="back-link" onclick="navigate('vendor-home')">← My auctions</button>
+      <div class="vendor-console">
+        <div class="closed-card">
+          <div class="icon-wrap" style="background:${won?'var(--green-bg)':'var(--paper)'};">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${won?'#2F6B4F':'#6B6459'}" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+          </div>
+          <h2>${a.status==='sent_to_tc' ? 'Auction closed' : 'Auction closed — result under review'}</h2>
+          <p>${r ? (r.rate!=null ? `Your final position was L${r.rank} at ${fmtINR(r.rate)}.` : 'You did not submit a rate before the auction closed.') : 'This auction has closed.'} ${a.status==='sent_to_tc' ? 'The Techno-Commercial Desk has received the ranked result.' : 'The Auction Team is reviewing the outcome before it moves forward.'}</p>
+          ${r && r.rate!=null ? `<div class="final-price">${fmtINR(r.rate)}</div>` : ''}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(a.format==='english') renderLiveVendorEnglish(a, vid, el);
+  else renderLiveVendorJapanese(a, vid, el);
+}
+function renderLiveVendorEnglish(a, vid, el){
+  const remaining = a.endsAt - Date.now();
+  const {bidders} = rankedVendorsEnglish(a);
+  const me = bidders.find(b=>b.vid===vid);
+  const myRank = me ? me.rank : null;
+  const leader = bidders[0];
+  const dec = a.config.decrementType==='percentage' ? Math.round((a.vendors[vid].lastBid ?? a.config.ceiling)*(a.config.decrementValue/100)) : a.config.decrementValue;
+  const basis = a.vendors[vid].lastBid ?? a.config.ceiling;
+  const suggested = Math.max(0, basis - dec);
+
+  el.innerHTML = `
+    <button class="back-link" onclick="navigate('vendor-home')">← My auctions</button>
+    <div class="vendor-console">
+      <div class="bid-panel">
+        <div class="bid-panel-top">
+          <div><h2>${a.title}</h2><div class="sub">${a.id} · English Reverse · Ceiling ${fmtINR(a.config.ceiling)}</div></div>
+          <div class="timer-block"><div class="tlabel">Closes in</div><div class="tval ${remaining<30000?'urgent':''}">${fmtClock(remaining)}</div></div>
+        </div>
+
+        <div class="your-rank-box">
+          <div class="rlabel">Your current rank</div>
+          <div class="rvalue ${myRank===1?'l1':''}">${myRank ? 'L'+myRank : '—'}</div>
+          <div class="rnote">${me ? `Your bid: ${fmtINR(me.bid)}` : 'Submit your first bid below'} ${leader && myRank!==1 ? ` · Leading bid: ${a.config.visibility==='full'?fmtINR(leader.bid):'hidden — rank only'}` : ''}</div>
+        </div>
+
+        <div class="bid-form">
+          <div class="input-prefix"><span>₹</span><input type="number" id="bid-input" value="${suggested}"></div>
+          <button class="btn btn-primary" onclick="submitVendorBid('${a.id}')">Submit bid</button>
+        </div>
+        <div id="bid-feedback">${vendorBidFeedback[a.id] ? (vendorBidFeedback[a.id].ok ? `<div class="bid-success-msg">${vendorBidFeedback[a.id].message}</div>` : `<div class="bid-error">⚠ ${vendorBidFeedback[a.id].message}</div>`) : ''}</div>
+        <div class="mini-note">Your next bid must undercut your own last accepted bid by at least ${a.config.decrementType==='absolute'?fmtINR(a.config.decrementValue):a.config.decrementValue+'%'}. ${a.config.visibility==='full' ? "You can see every bidder's live price." : "You can only see your own rank — not competitors' prices."}</div>
+
+        ${a.config.visibility==='full' ? `
+        <div class="rank-board-mini">
+          <h4>Live board</h4>
+          <div class="rank-table">
+            <div class="rank-head-row"><span>Rank</span><span>Vendor</span><span style="text-align:right;">Bid</span><span></span></div>
+            ${bidders.map(b=>`<div class="rank-row ${b.rank===1?'l1':''} ${b.vid===vid?'flash':''}">
+              <span class="r-rank">L${b.rank}</span><span class="r-name">${b.vid===vid?'You':b.name}</span><span class="r-price">${fmtINR(b.bid)}</span><span></span>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+  `;
+}
+function submitVendorBid(id){
+  const a = auctions[id];
+  const input = document.getElementById('bid-input');
+  const price = Number(input.value);
+  const res = submitBid(id, currentUser.id, price, false);
+  if(!res.ok){ vendorBidFeedback[id] = {ok:false, message:res.message}; renderLiveVendor(id); }
+  else { vendorBidFeedback[id] = {ok:true, message:`Bid accepted — recorded at ${fmtTime(new Date())}.`}; renderLiveVendor(id); }
+}
+function renderLiveVendorJapanese(a, vid, el){
+  const v = a.vendors[vid];
+  const windowRemaining = a.phase==='awaiting_response' ? a.windowEndsAt-Date.now() : 0;
+  const pct = a.phase==='awaiting_response' ? Math.max(0, windowRemaining/(a.config.responseWindowSec*1000)*100) : 0;
+  const activeN = activeVendorCount(a);
+
+  el.innerHTML = `
+    <button class="back-link" onclick="navigate('vendor-home')">← My auctions</button>
+    <div class="vendor-console">
+      <div class="bid-panel">
+        <div class="bid-panel-top">
+          <div><h2>${a.title}</h2><div class="sub">${a.id} · Japanese Descending Clock · Starting price ${fmtINR(a.config.startingPrice)}</div></div>
+        </div>
+
+        <div class="clock-face">
+          <div class="clabel">Current call price</div>
+          <div class="cprice">${fmtINR(a.currentCallPrice)}</div>
+          <div class="cdelta">Floor ${fmtINR(a.config.floorPrice)} · ${activeN} bidder${activeN===1?'':'s'} still active</div>
+        </div>
+
+        ${a.phase==='transition' ? `
+          <div class="decision-status">Calling the next price…</div>
+        ` : `
+          <div class="decision-window">
+            <div class="window-bar"><div class="window-bar-fill" style="width:${pct}%;"></div></div>
+            ${v.respondedThisWindow
+              ? `<div class="decision-status responded">✓ Confirmed — you're staying in at ${fmtINR(a.currentCallPrice)}</div>`
+              : `<div class="decision-btns">
+                  <button class="btn btn-dark" onclick="humanRespond('${a.id}','stay')">Stay in</button>
+                  <button class="btn btn-danger-outline" onclick="humanRespond('${a.id}','drop')">Drop out</button>
+                </div>`
+            }
+          </div>
+        `}
+        <div class="mini-note">Confirm within the response window at each falling price. ${a.config.autoDrop ? "No response before the window closes drops you automatically at that price." : "In this configuration, no response is treated as staying in."}</div>
+
+        <div class="field-count">
+          <div><b>${fmtINR(a.config.tickDecrement)}</b><span>Per tick</span></div>
+          <div><b>${a.config.tickIntervalSec}s</b><span>Tick interval</span></div>
+          <div><b>${a.config.minVendorsRemaining}</b><span>Closes at</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+</script>
+</body>
+</html>
